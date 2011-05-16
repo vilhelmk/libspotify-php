@@ -115,9 +115,8 @@ PHP_METHOD(SpotifyPlaylist, getTracks)
 	zval *object = getThis();
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(object TSRMLS_CC);
 	
-	sp_playlist *playlist = sp_session_starred_create(p->session);
 	playlist_array = return_value;
-	playlist_browse = playlist;
+	playlist_browse = p->playlist;
 	sp_playlist_add_callbacks(playlist_browse, &pl_callbacks, NULL);
 	playlist_browse_try();
 
