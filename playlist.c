@@ -134,10 +134,29 @@ PHP_METHOD(SpotifyPlaylist, getTracks)
 	} 
 }
 
+PHP_METHOD(SpotifyPlaylist, rename)
+{
+	zval *object = getThis(), *z_name;
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(object TSRMLS_CC);
+	sp_error error;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &z_name) == FAILURE) {
+		return;
+	}
+
+	error = sp_playlist_rename(p->playlist, Z_STRVAL_P(z_name));
+	if (SP_ERROR_OK != error) {
+		RETURN_FALSE;
+	}
+
+	RETURN_TRUE;
+}
+
 function_entry spotifyplaylist_methods[] = {
     PHP_ME(SpotifyPlaylist, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyPlaylist, getName,		NULL,	ZEND_ACC_PUBLIC)
     PHP_ME(SpotifyPlaylist, getTracks,     NULL,   ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, rename,			NULL,	ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}
 };
 
