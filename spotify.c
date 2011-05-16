@@ -75,15 +75,17 @@ PHP_METHOD(Spotify, getStarredPlaylist)
 		sp_session_process_events(obj->session, &obj->timeout);
 	} while (obj->timeout == 0);
 
+	sp_playlist *playlist = sp_session_starred_create(obj->session);
+
 	object_init_ex(return_value, spotifyplaylist_ce);
-	SPOTIFY_METHOD1(SpotifyPlaylist, __construct, &temp, return_value, object);
+	SPOTIFY_METHOD2(SpotifyPlaylist, __construct, &temp, return_value, object, playlist);
 }
 
 static void logged_in(sp_session *session, sp_error error)
 {
 	is_logged_in = 1;
 	if (SP_ERROR_OK != error) {
-		php_printf("FAILED!\n");
+		php_printf((char*)sp_error_message(error));
 	} else {
 		php_printf("user is logged in\n");
 	}

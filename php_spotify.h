@@ -21,6 +21,12 @@ typedef struct {
     int timeout;
 } spotify_object;
 
+typedef struct {
+	zend_object std;
+	sp_session *session;
+	sp_playlist *playlist;
+} spotifyplaylist_object;
+
 //PHP_FUNCTION(spotify_init);
 //PHP_FUNCTION(spotify_destroy);
 //PHP_FUNCTION(spotify_get_starred_playlist);

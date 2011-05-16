@@ -97,49 +97,45 @@ static sp_playlist_callbacks pl_callbacks = {
 PHP_METHOD(SpotifyPlaylist, __construct)
 {
 	zval *object = getThis();
-	zval *temp;
+	zval *parent;
+	sp_playlist *playlist;
 	
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "O", &temp, spotify_ce) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Oz", &parent, spotify_ce, &playlist) == FAILURE) {
 		return;
 	}
 
-	spotify_object *p = (spotify_object*)zend_object_store_get_object((temp) TSRMLS_CC);
-	spotify_object *obj = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
+	spotify_object *p = (spotify_object*)zend_object_store_get_object((parent) TSRMLS_CC);
+	spotifyplaylist_object *obj = (spotifyplaylist_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
-
-	if (!obj->session) {
-		php_printf("invalid session\n");
-	}
+	obj->playlist = playlist;
 }
 
 PHP_METHOD(SpotifyPlaylist, getTracks)
 {
 	zval *object = getThis();
-	spotify_object *p = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
-if (!p->session) {
-	php_printf("WTF\n");
-}
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(object TSRMLS_CC);
+	
 	sp_playlist *playlist = sp_session_starred_create(p->session);
 	playlist_array = return_value;
 	playlist_browse = playlist;
 	sp_playlist_add_callbacks(playlist_browse, &pl_callbacks, NULL);
 	playlist_browse_try();
 
-	p->timeout = 0;
+	int timeout = 0;
 	while (playlist_browsing) {
-		sp_session_process_events(p->session, &p->timeout);
+		sp_session_process_events(p->session, &timeout);
 	} 
 }
 
 function_entry spotifyplaylist_methods[] = {
-    PHP_ME(SpotifyPlaylist, __construct,            NULL,   ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+    PHP_ME(SpotifyPlaylist, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
     PHP_ME(SpotifyPlaylist, getTracks,     NULL,   ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}
 };
 
 void spotifyplaylist_free_storage(void *object TSRMLS_DC)
 {
-	spotify_object *obj = (spotify_object*)object;
+	spotifyplaylist_object *obj = (spotifyplaylist_object*)object;
 	zend_hash_destroy(obj->std.properties);
 	FREE_HASHTABLE(obj->std.properties);
 	efree(obj);
@@ -150,8 +146,8 @@ zend_object_value spotifyplaylist_create_handler(zend_class_entry *type TSRMLS_D
 	zval *tmp;
 	zend_object_value retval;
 
-	spotify_object *obj = (spotify_object *)emalloc(sizeof(spotify_object));
-	memset(obj, 0, sizeof(spotify_object));
+	spotifyplaylist_object *obj = (spotifyplaylist_object *)emalloc(sizeof(spotifyplaylist_object));
+	memset(obj, 0, sizeof(spotifyplaylist_object));
    // obj->std.ce = type;
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
