@@ -15,5 +15,14 @@ As this is higly experimental you should make note of a few things:
 ## Usage:
 
     $spotify = new Spotify("/path/to/key.file", "username", "password");
-    $starredPlaylist = $spotify->getStarredPlaylist();
+    
+    // All tracks in the starred playlist
+    $starredPlaylist = $spotify->getStarredPlaylist(); // returns SpotifyPlaylist
 	var_dump($starredPlaylist->getTracks());
+     
+	// List all playlists
+	$playlists = $spotify->getPlaylists(); // returns array of SpotifyPlaylist
+	foreach ($playlists as $playlist) {
+		printf("%s\n", $playlist->getName());
+		// print_r($playlist->getTracks());
+	}
