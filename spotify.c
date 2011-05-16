@@ -61,7 +61,7 @@ PHP_METHOD(Spotify, __construct)
 		return;
 	}
 
-	key_data = (char*)malloc(sizeof(char) * key_size);
+	key_data = (char*)emalloc(sizeof(char) * key_size);
 	if (fread(key_data, 1, key_size, fp) != key_size) {
 		fclose(fp);
 		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "failed reading key file", 0 TSRMLS_CC);

@@ -32,7 +32,7 @@ static void playlist_browse_try(void) {
         zval *track_array;
         ALLOC_INIT_ZVAL(track_array);
         array_init(track_array);
-        add_assoc_string(track_array, "name", strdup(sp_track_name(t)), 1);
+        add_assoc_string(track_array, "name", estrdup(sp_track_name(t)), 1);
 
         char *ts;
         int duration = sp_track_duration(t);
