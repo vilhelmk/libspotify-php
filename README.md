@@ -15,6 +15,6 @@ As this is higly experimental you should make note of a few things:
 
 ## Usage:
 
-    spotify_init("user", "pass");
-    $starred_playlist = spotify_get_starred_playlist();
-    spotify_destroy();
+    $spotify = new Spotify("/path/to/key.file", "username", "password");
+    $starredPlaylist = $spotify->getStarredPlaylist();
+	var_dump($starredPlaylist->getTracks());
