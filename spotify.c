@@ -49,7 +49,7 @@ PHP_METHOD(Spotify, __construct)
 
 	error = sp_session_create(&config, &session);
 	if (SP_ERROR_OK != error) {
-		// FIXME throw exception
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "unable to create session", 0 TSRMLS_CC);
 		return;
 	}
 
@@ -84,13 +84,12 @@ PHP_METHOD(Spotify, getStarredPlaylist)
 static void logged_in(sp_session *session, sp_error error)
 {
 	is_logged_in = 1;
+
 	if (SP_ERROR_OK != error) {
-		php_printf((char*)sp_error_message(error));
-	} else {
-		php_printf("user is logged in\n");
+		char *errMsg;
+		spprintf(&errMsg, 0, "login failed: %s", sp_error_message(error));
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), errMsg, 0 TSRMLS_CC);
 	}
-	//spotify_object *obj = (spotify_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
-	//obj->is_logged_in = 1;
 }
 
 function_entry spotify_methods[] = {
