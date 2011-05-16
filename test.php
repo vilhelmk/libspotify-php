@@ -1,5 +1,5 @@
 <?php
 
-$s = new Spotify("key.file", "user", "pass");
+$s = new Spotify("spotify_appkey.key", "user", "pass");
 $f = $s->getStarredPlaylist();
 var_dump($f->getTracks());

@@ -33,6 +33,9 @@ PHP_METHOD(Spotify, __construct)
 	sp_session_config config;
 	sp_error error;
 	sp_session *session;
+	FILE *fp;
+	long key_size;
+	char *key_data, *key_filename;
 
 	memset(&config, 0, sizeof(config));
 	config.api_version = SPOTIFY_API_VERSION;
@@ -40,10 +43,34 @@ PHP_METHOD(Spotify, __construct)
 	config.settings_location = "tmp";
 	config.user_agent = "libspotify-php";
 
-	extern const char g_appkey[];
-	extern const size_t g_appkey_size;
-	config.application_key = g_appkey;
-	config.application_key_size = g_appkey_size;
+	key_filename = Z_STRVAL_P(z_key);
+
+	fp = fopen(key_filename, "rb");
+	if (!fp) {
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "unable to open spotify key file", 0 TSRMLS_CC);
+		return;
+	}
+
+	fseek(fp, 0L, SEEK_END);
+	key_size = ftell(fp);
+	fseek(fp, 0L, SEEK_SET);
+
+	if (key_size > 4096) {
+		fclose(fp);
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "key file is way too large to be a key file", 0 TSRMLS_CC);
+		return;
+	}
+
+	key_data = (char*)malloc(sizeof(char) * key_size);
+	if (fread(key_data, 1, key_size, fp) != key_size) {
+		fclose(fp);
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "failed reading key file", 0 TSRMLS_CC);
+		return;
+	}
+	fclose(fp);
+
+	config.application_key = key_data;
+	config.application_key_size = key_size;
 
 	config.callbacks = &callbacks;
 
