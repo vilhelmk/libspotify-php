@@ -91,6 +91,24 @@ PHP_METHOD(Spotify, __construct)
 	} while (obj->timeout == 0 || !is_logged_in);
 }
 
+PHP_METHOD(Spotify, __destruct)
+{
+	spotify_object *obj = (spotify_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	int timeout = 0;
+
+    do {
+        sp_session_process_events(obj->session, &timeout);
+    } while (timeout == 0);
+
+    if (obj->session) {
+        sp_session_logout(obj->session);
+        //sp_session_release(g_session);
+        RETURN_BOOL(1);
+    } else {
+        RETURN_BOOL(0);
+    }
+}
+
 PHP_METHOD(Spotify, getPlaylists)
 {
 	zval *object = getThis(), temp;
@@ -148,6 +166,7 @@ static void logged_in(sp_session *session, sp_error error)
 
 function_entry spotify_methods[] = {
     PHP_ME(Spotify, __construct,            NULL,   ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Spotify, __destruct,				NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(Spotify, getPlaylists,			NULL,	ZEND_ACC_PUBLIC)
     PHP_ME(Spotify, getStarredPlaylist,     NULL,   ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}
