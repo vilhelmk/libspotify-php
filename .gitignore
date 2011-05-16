@@ -1,0 +1,17 @@
+config*
+Makefile*
+*.lo
+*.la
+ac*.m4
+.deps
+.libs
+build
+install-sh
+mkinstalldirs
+modules
+tmp
+missing
+libtool
+autom4te.cache/
+ltmain.sh
+run-tests.php
