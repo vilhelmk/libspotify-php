@@ -9,8 +9,7 @@ As this is higly experimental you should make note of a few things:
 
 ## Installation:
 
-  - Install libspotify.
-  - add appkey.c (fetch your key from developer.spotify.com; this will improve in the future)
+  - Install the libspotify dev files and binary that fits your system.
   - Run these commands: phpize; ./configure --enable-spotify; make && make install
 
 ## Usage:
