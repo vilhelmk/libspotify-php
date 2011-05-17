@@ -197,7 +197,6 @@ PHP_METHOD(SpotifyPlaylist, addTrack)
 		position = sp_playlist_num_tracks(p->playlist);
 	} else {
 		position = Z_LVAL_P(z_position);
-		php_printf("pos = %d\n", position);
 	}
 
 	error = sp_playlist_add_tracks(p->playlist, tracks, 1, position, p->session);
