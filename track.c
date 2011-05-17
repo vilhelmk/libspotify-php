@@ -61,11 +61,21 @@ PHP_METHOD(SpotifyTrack, getArtist)
 	SPOTIFY_METHOD2(SpotifyArtist, __construct, &temp, return_value, object, artist);
 }
 
+PHP_METHOD(SpotifyTrack, getDuration)
+{
+	zval *object = getThis();
+	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+	int duration_ms = sp_track_duration(p->track);
+	RETURN_DOUBLE((float)duration_ms / 1000.0f);
+}
+
 function_entry spotifytrack_methods[] = {
     PHP_ME(SpotifyTrack, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyTrack, getName,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getAlbum,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getArtist,		NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrack, getDuration,	NULL,	ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}
 };
 
