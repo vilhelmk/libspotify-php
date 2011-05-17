@@ -70,12 +70,45 @@ PHP_METHOD(SpotifyTrack, getDuration)
 	RETURN_DOUBLE((float)duration_ms / 1000.0f);
 }
 
+PHP_METHOD(SpotifyTrack, getPopularity)
+{
+	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	RETURN_LONG(sp_track_popularity(p->track));
+}
+
+PHP_METHOD(SpotifyTrack, isStarred)
+{
+	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	if (sp_track_is_starred(p->session, p->track)) {
+		RETURN_TRUE;
+	} else {
+		RETURN_FALSE;
+	}
+}
+
+PHP_METHOD(SpotifyTrack, setStarred)
+{
+	bool starred;
+	zval *object = getThis();
+	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|b", &starred) == FAILURE) {
+		return;
+	}
+
+	sp_track_set_starred(p->session, &p->track, 1, starred);
+}
+
 function_entry spotifytrack_methods[] = {
     PHP_ME(SpotifyTrack, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyTrack, getName,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getAlbum,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getArtist,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getDuration,	NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrack, getPopularity,	NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrack, isStarred,		NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrack, setStarred,	NULL,	ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}
 };
 
