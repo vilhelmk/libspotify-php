@@ -176,6 +176,39 @@ PHP_METHOD(SpotifyPlaylist, rename)
 	RETURN_TRUE;
 }
 
+PHP_METHOD(SpotifyPlaylist, addTrack)
+{
+	zval *track, retval, *z_position, *object = getThis();
+	sp_error error;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "O|z", &track, spotifytrack_ce, &z_position) == FAILURE) {
+		return;
+	}
+
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+	sp_track **tracks = (sp_track**)emalloc(sizeof(sp_track*) * 1);
+	spotifytrack_object *track_obj = (spotifytrack_object*)zend_object_store_get_object(track TSRMLS_CC);
+	tracks[0] = track_obj->track;
+
+	int position;
+
+	if (Z_TYPE_P(z_position) == IS_NULL || Z_LVAL_P(z_position) < 0) {
+		position = sp_playlist_num_tracks(p->playlist);
+	} else {
+		position = Z_LVAL_P(z_position);
+		php_printf("pos = %d\n", position);
+	}
+
+	error = sp_playlist_add_tracks(p->playlist, tracks, 1, position, p->session);
+
+	if (SP_ERROR_OK == error) {
+		RETURN_TRUE;
+	} else {
+		RETURN_FALSE;
+	}
+}
+
 PHP_METHOD(SpotifyPlaylist, __toString)
 {
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -190,6 +223,7 @@ function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, isCollaborative,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, setCollaborative,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, rename,				NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, addTrack,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, __toString,			NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };

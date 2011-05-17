@@ -15,7 +15,7 @@ PHP_METHOD(SpotifyTrack, __construct)
 	spotify_object *p = (spotify_object*)zend_object_store_get_object((parent) TSRMLS_CC);
 	spotifytrack_object *obj = (spotifytrack_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
-	obj->track = track;;
+	obj->track = track;
 }
 
 PHP_METHOD(SpotifyTrack, getName)
@@ -24,6 +24,18 @@ PHP_METHOD(SpotifyTrack, getName)
 	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(object TSRMLS_CC);
 
 	RETURN_STRING(sp_track_name(p->track), 1);
+}
+
+PHP_METHOD(SpotifyTrack, getURI)
+{
+	char uri[256];
+	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	
+	// TODO add support for offset in the track link
+	sp_link *link = sp_link_create_from_track(p->track, 0);
+	sp_link_as_string(link, uri, 256);
+
+	RETURN_STRING(uri, 1);
 }
 
 PHP_METHOD(SpotifyTrack, getAlbum)
@@ -115,6 +127,7 @@ PHP_METHOD(SpotifyTrack, __toString)
 function_entry spotifytrack_methods[] = {
 	PHP_ME(SpotifyTrack, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyTrack, getName,		NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrack, getURI,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getAlbum,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getArtist,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getDuration,	NULL,	ZEND_ACC_PUBLIC)
