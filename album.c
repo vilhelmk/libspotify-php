@@ -44,6 +44,27 @@ PHP_METHOD(SpotifyAlbum, getArtist)
 	SPOTIFY_METHOD2(SpotifyArtist, __construct, &temp, return_value, getThis(), artist);
 }
 
+PHP_METHOD(SpotifyAlbum, getNumTracks)
+{
+}
+
+PHP_METHOD(SpotifyAlbum, getTracks)
+{
+	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	
+	container_browse_data pcfg;
+	pcfg.session = p->session;
+	pcfg.obj = getThis();
+
+	browse_album_get_tracks(return_value, &pcfg, p->album);
+}
+
+PHP_METHOD(SpotifyAlbum, getType)
+{
+	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	RETURN_LONG(sp_album_type(p->album));
+}
+
 PHP_METHOD(SpotifyAlbum, __toString)
 {
 	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -55,6 +76,9 @@ function_entry spotifyalbum_methods[] = {
 	PHP_ME(SpotifyAlbum, getName,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbum, getYear,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbum, getArtist,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbum, getNumTracks,		NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbum, getTracks,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbum, getType,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbum, __toString,		NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
@@ -95,4 +119,9 @@ void spotify_init_album(TSRMLS_D)
 	spotifyalbum_ce->create_object = spotifyalbum_create_handler;
 	//memcpy(&spotify_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
 	//spotify_object_handlers.clone_obj = NULL;
+
+	zend_declare_class_constant_long(spotifyalbum_ce, "TYPE_ALBUM", strlen("TYPE_ALBUM"), 0 TSRMLS_CC);
+	zend_declare_class_constant_long(spotifyalbum_ce, "TYPE_SINGLE", strlen("TYPE_SINGLE"), 1 TSRMLS_CC);
+	zend_declare_class_constant_long(spotifyalbum_ce, "TYPE_COMPILATION", strlen("TYPE_COMPILATION"), 2 TSRMLS_CC);
+	zend_declare_class_constant_long(spotifyalbum_ce, "TYPE_UNKNOWN", strlen("TYPE_UNKNOWN"), 3 TSRMLS_CC);
 }
