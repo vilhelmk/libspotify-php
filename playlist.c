@@ -136,6 +136,17 @@ PHP_METHOD(SpotifyPlaylist, getOwner)
 	SPOTIFY_METHOD2(SpotifyUser, __construct, &temp, return_value, getThis(), user);
 }
 
+PHP_METHOD(SpotifyPlaylist, isCollaborative)
+{
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	if (sp_playlist_is_collaborative(p->playlist)) {
+		RETURN_TRUE;
+	} else {
+		RETURN_FALSE;
+	}
+}
+
 PHP_METHOD(SpotifyPlaylist, rename)
 {
 	zval *object = getThis(), *z_name;
@@ -161,13 +172,14 @@ PHP_METHOD(SpotifyPlaylist, __toString)
 }
 
 function_entry spotifyplaylist_methods[] = {
-    PHP_ME(SpotifyPlaylist, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
-	PHP_ME(SpotifyPlaylist, getName,		NULL,	ZEND_ACC_PUBLIC)
-    PHP_ME(SpotifyPlaylist, getTracks,     NULL,   ZEND_ACC_PUBLIC)
-	PHP_ME(SpotifyPlaylist, getOwner,		NULL,	ZEND_ACC_PUBLIC)
-	PHP_ME(SpotifyPlaylist, rename,			NULL,	ZEND_ACC_PUBLIC)
-	PHP_ME(SpotifyPlaylist, __toString,		NULL,	ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	PHP_ME(SpotifyPlaylist, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
+	PHP_ME(SpotifyPlaylist, getName,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, getTracks,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, getOwner,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, isCollaborative,	NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, rename,				NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, __toString,			NULL,	ZEND_ACC_PUBLIC)
+	{NULL, NULL, NULL}
 };
 
 void spotifyplaylist_free_storage(void *object TSRMLS_DC)
