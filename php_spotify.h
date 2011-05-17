@@ -51,6 +51,11 @@ typedef struct {
 	sp_user *user;
 } spotifyuser_object;
 
+typedef struct {
+	sp_session *session;
+	zval *obj;
+} container_browse_data;
+
 extern zend_module_entry spotify_module_entry;
 #define phpext_spotify_ptr &spotify_module_entry
 
@@ -64,6 +69,10 @@ extern zend_class_entry *spotifytrack_ce;
 extern zend_class_entry *spotifyartist_ce;
 extern zend_class_entry *spotifyalbum_ce;
 extern zend_class_entry *spotifyuser_ce;
+
+extern void (*metadata_updated_fn)(void);
+
+extern void get_playlistcontainer_playlists(zval *return_value, container_browse_data *p, sp_playlistcontainer *pc); 
 
 #if ZEND_MODULE_API_NO >= 20090115
 # define PUSH_PARAM(arg) zend_vm_stack_push(arg TSRMLS_CC)

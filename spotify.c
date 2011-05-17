@@ -5,10 +5,19 @@ zend_object_handlers spotify_object_handlers;
 
 static void logged_in(sp_session *session, sp_error error) ;
 
+void (*metadata_updated_fn)(void);
+
+static void metadata_updated(sp_session *sess)
+{
+	if (metadata_updated_fn) {
+		metadata_updated_fn();
+	}
+}
+
 static sp_session_callbacks callbacks = {
 	&logged_in,
 	NULL,
-	NULL,
+	&metadata_updated,
 	NULL,
 	NULL,
 	NULL,
@@ -100,13 +109,13 @@ PHP_METHOD(Spotify, __destruct)
         sp_session_process_events(obj->session, &timeout);
     } while (timeout == 0);
 
-    if (obj->session) {
-        sp_session_logout(obj->session);
-        //sp_session_release(g_session);
-        RETURN_BOOL(1);
-    } else {
-        RETURN_BOOL(0);
-    }
+	sp_session_logout(obj->session);
+	//sp_session_release(g_session);
+
+	timeout = 0;
+	do {
+		sp_session_process_events(obj->session, &timeout);
+	} while (timeout == 0);
 }
 
 PHP_METHOD(Spotify, getPlaylists)
@@ -122,18 +131,11 @@ PHP_METHOD(Spotify, getPlaylists)
 	sp_playlistcontainer *container = sp_session_playlistcontainer(obj->session);
 	num_playlists = sp_playlistcontainer_num_playlists(container);
 
-	array_init(return_value);
+	container_browse_data pcfg;
+	pcfg.session = obj->session;
+	pcfg.obj = object;
 
-	for (i=0; i<num_playlists; i++) {
-		zval *spotifyplaylist;
-
-		sp_playlist *playlist = sp_playlistcontainer_playlist(container, i);
-		ALLOC_INIT_ZVAL(spotifyplaylist);
-		object_init_ex(spotifyplaylist, spotifyplaylist_ce);
-		SPOTIFY_METHOD2(SpotifyPlaylist, __construct, &temp, spotifyplaylist, object, playlist);
-
-		add_next_index_zval(return_value, spotifyplaylist);
-	}
+	get_playlistcontainer_playlists(return_value, &pcfg, container);
 }
 
 PHP_METHOD(Spotify, getStarredPlaylist)

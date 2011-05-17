@@ -1,7 +1,6 @@
 #include "php_spotify.h"
 
 zend_class_entry *spotifyplaylist_ce;
-void (*metadata_updated_fn)(void);
 
 static sp_playlist *playlist_browse;
 static sp_playlist_callbacks pl_callbacks;
