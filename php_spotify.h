@@ -31,7 +31,6 @@ typedef struct {
 	zend_object std;
 	sp_session *session;
 	sp_track *track;
-	sp_playlist *playlist;
 } spotifytrack_object;
 
 typedef struct {

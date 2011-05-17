@@ -8,7 +8,7 @@ PHP_METHOD(SpotifyArtist, __construct)
 	zval *parent;
 	sp_artist *artist;
 	
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Oz", &parent, spotifytrack_ce, &artist) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &parent, &artist) == FAILURE) {
 		return;
 	}
 

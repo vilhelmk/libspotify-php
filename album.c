@@ -8,7 +8,7 @@ PHP_METHOD(SpotifyAlbum, __construct)
 	zval *parent;
 	sp_album *album;
 	
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Oz", &parent, spotifytrack_ce, &album) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &parent, &album) == FAILURE) {
 		return;
 	}
 
@@ -26,6 +26,24 @@ PHP_METHOD(SpotifyAlbum, getName)
 	RETURN_STRING(sp_album_name(p->album), 1);
 }
 
+PHP_METHOD(SpotifyAlbum, getYear)
+{
+	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	RETURN_LONG(sp_album_year(p->album));
+}
+
+PHP_METHOD(SpotifyAlbum, getArtist)
+{
+	sp_artist *artist;
+	zval temp;
+	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	artist = sp_album_artist(p->album);
+
+	object_init_ex(return_value, spotifyartist_ce);
+	SPOTIFY_METHOD2(SpotifyArtist, __construct, &temp, return_value, getThis(), artist);
+}
+
 PHP_METHOD(SpotifyAlbum, __toString)
 {
 	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -35,6 +53,8 @@ PHP_METHOD(SpotifyAlbum, __toString)
 function_entry spotifyalbum_methods[] = {
 	PHP_ME(SpotifyAlbum, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyAlbum, getName,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbum, getYear,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbum, getArtist,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbum, __toString,		NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
