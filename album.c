@@ -26,10 +26,17 @@ PHP_METHOD(SpotifyAlbum, getName)
 	RETURN_STRING(sp_album_name(p->album), 1);
 }
 
+PHP_METHOD(SpotifyAlbum, __toString)
+{
+	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	RETURN_STRING(sp_album_name(p->album), 1);
+}
+
 function_entry spotifyalbum_methods[] = {
-    PHP_ME(SpotifyAlbum, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
-	PHP_ME(SpotifyAlbum, getName,		NULL,	ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	PHP_ME(SpotifyAlbum, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
+	PHP_ME(SpotifyAlbum, getName,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbum, __toString,		NULL,	ZEND_ACC_PUBLIC)
+	{NULL, NULL, NULL}
 };
 
 void spotifyalbum_free_storage(void *object TSRMLS_DC)

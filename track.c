@@ -106,8 +106,14 @@ PHP_METHOD(SpotifyTrack, setStarred)
 	sp_track_set_starred(p->session, &p->track, 1, starred);
 }
 
+PHP_METHOD(SpotifyTrack, __toString)
+{
+	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	RETURN_STRING(sp_track_name(p->track), 1);
+}
+
 function_entry spotifytrack_methods[] = {
-    PHP_ME(SpotifyTrack, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
+	PHP_ME(SpotifyTrack, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyTrack, getName,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getAlbum,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getArtist,		NULL,	ZEND_ACC_PUBLIC)
@@ -116,7 +122,8 @@ function_entry spotifytrack_methods[] = {
 	PHP_ME(SpotifyTrack, getIndex,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, isStarred,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, setStarred,	NULL,	ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	PHP_ME(SpotifyTrack, __toString,	NULL,	ZEND_ACC_PUBLIC)
+	{NULL, NULL, NULL}
 };
 
 void spotifytrack_free_storage(void *object TSRMLS_DC)

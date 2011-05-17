@@ -124,6 +124,18 @@ PHP_METHOD(SpotifyPlaylist, getTracks)
 	} 
 }
 
+PHP_METHOD(SpotifyPlaylist, getOwner)
+{
+	sp_user *user;
+	zval temp;
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	user = sp_playlist_owner(p->playlist);
+
+	object_init_ex(return_value, spotifyuser_ce);
+	SPOTIFY_METHOD2(SpotifyUser, __construct, &temp, return_value, getThis(), user);
+}
+
 PHP_METHOD(SpotifyPlaylist, rename)
 {
 	zval *object = getThis(), *z_name;
@@ -142,11 +154,19 @@ PHP_METHOD(SpotifyPlaylist, rename)
 	RETURN_TRUE;
 }
 
+PHP_METHOD(SpotifyPlaylist, __toString)
+{
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	RETURN_STRING(sp_playlist_name(p->playlist), 1);
+}
+
 function_entry spotifyplaylist_methods[] = {
     PHP_ME(SpotifyPlaylist, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyPlaylist, getName,		NULL,	ZEND_ACC_PUBLIC)
     PHP_ME(SpotifyPlaylist, getTracks,     NULL,   ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, getOwner,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, rename,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, __toString,		NULL,	ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}
 };
 
