@@ -28,8 +28,16 @@ PHP_METHOD(SpotifyTrack, getName)
 
 PHP_METHOD(SpotifyTrack, getAlbum)
 {
-	zval *object = getThis(), *album;
+	zval *object = getThis(), temp;
 	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+	sp_album *album = sp_track_album(p->track);
+	if (NULL == album) {
+		RETURN_FALSE;
+	}
+
+	object_init_ex(return_value, spotifyalbum_ce);
+	SPOTIFY_METHOD2(SpotifyAlbum, __construct, &temp, return_value, object, album);
 }
 
 PHP_METHOD(SpotifyTrack, getArtist)

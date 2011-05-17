@@ -39,6 +39,12 @@ typedef struct {
 	sp_artist *artist;
 } spotifyartist_object;
 
+typedef struct {
+	zend_object std;
+	sp_session *session;
+	sp_album *album;
+} spotifyalbum_object;
+
 extern zend_module_entry spotify_module_entry;
 #define phpext_spotify_ptr &spotify_module_entry
 
@@ -50,6 +56,7 @@ extern zend_class_entry *spotify_ce;
 extern zend_class_entry *spotifyplaylist_ce;
 extern zend_class_entry *spotifytrack_ce;
 extern zend_class_entry *spotifyartist_ce;
+extern zend_class_entry *spotifyalbum_ce;
 
 #if ZEND_MODULE_API_NO >= 20090115
 # define PUSH_PARAM(arg) zend_vm_stack_push(arg TSRMLS_CC)

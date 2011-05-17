@@ -212,6 +212,7 @@ PHP_MINIT_FUNCTION(spotify)
 	spotify_init_playlist(TSRMLS_C);
 	spotify_init_track(TSRMLS_C);
 	spotify_init_artist(TSRMLS_C);
+	spotify_init_album(TSRMLS_C);
 
 	return SUCCESS;
 }
