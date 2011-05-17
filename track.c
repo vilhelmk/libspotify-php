@@ -76,6 +76,12 @@ PHP_METHOD(SpotifyTrack, getPopularity)
 	RETURN_LONG(sp_track_popularity(p->track));
 }
 
+PHP_METHOD(SpotifyTrack, getIndex)
+{
+	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	RETURN_LONG(sp_track_index(p->track));
+}
+
 PHP_METHOD(SpotifyTrack, isStarred)
 {
 	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -107,6 +113,7 @@ function_entry spotifytrack_methods[] = {
 	PHP_ME(SpotifyTrack, getArtist,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getDuration,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getPopularity,	NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrack, getIndex,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, isStarred,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, setStarred,	NULL,	ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}
