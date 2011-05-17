@@ -147,6 +147,18 @@ PHP_METHOD(SpotifyPlaylist, isCollaborative)
 	}
 }
 
+PHP_METHOD(SpotifyPlaylist, setCollaborative)
+{
+	bool collab;
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|b", &collab) == FAILURE) {
+		return;
+	}
+
+	sp_playlist_set_collaborative(p->playlist, collab);
+}
+
 PHP_METHOD(SpotifyPlaylist, rename)
 {
 	zval *object = getThis(), *z_name;
@@ -177,6 +189,7 @@ function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, getTracks,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getOwner,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, isCollaborative,	NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, setCollaborative,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, rename,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, __toString,			NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
