@@ -5,11 +5,12 @@ void (*metadata_updated_fn)(void);
 
 static sp_playlist *playlist_browse;
 static sp_playlist_callbacks pl_callbacks;
-static zval *playlist_array;
-int playlist_browsing;
+static zval *playlist_array, *parent_object;
+static int playlist_browsing;
 
 static void playlist_browse_try(void) {
     int i, tracks;
+	zval temp;
 
     playlist_browsing = 1;
     metadata_updated_fn = playlist_browse_try;
@@ -28,31 +29,18 @@ static void playlist_browse_try(void) {
     array_init(playlist_array);
 
     for (i=0; i<tracks; i++) {
+		zval *track;
         sp_track *t = sp_playlist_track(playlist_browse, i);
-        zval *track_array;
-        ALLOC_INIT_ZVAL(track_array);
-        array_init(track_array);
-        add_assoc_string(track_array, "name", estrdup(sp_track_name(t)), 1);
+		if (NULL == t) {
+			continue;
+		}
 
-        char *ts;
-        int duration = sp_track_duration(t);
-        spprintf(&ts, 0, "%02d:%02d", duration/60000, (duration/1000)/60);
-        add_assoc_string(track_array, "duration", ts, 1);
+		ALLOC_INIT_ZVAL(track);
+		object_init_ex(track, spotifytrack_ce);
+		SPOTIFY_METHOD2(SpotifyTrack, __construct, &temp, track, parent_object, t);
 
-        sp_link *l = sp_link_create_from_track(t, 0);
-        char url[256];
-        sp_link_as_string(l, url, sizeof(url));
-        add_assoc_string(track_array, "link", url, 1);
-        sp_link_release(l);
-
-        sp_artist *a = sp_track_artist(t, 0); // FIXME add support for showing multiple artists
-        add_assoc_string(track_array, "artist", (char*)sp_artist_name(a), 1);
-        sp_artist_release(a);
-
-        add_assoc_long(track_array, "ts", sp_playlist_track_create_time(playlist_browse, i));
-
-        add_next_index_zval(playlist_array, track_array);
-    }
+        add_next_index_zval(playlist_array, track);
+	}
 
     sp_playlist_remove_callbacks(playlist_browse, &pl_callbacks, NULL);
     sp_playlist_release(playlist_browse);
@@ -60,6 +48,7 @@ static void playlist_browse_try(void) {
     playlist_browse = NULL;
     metadata_updated_fn = NULL;
     playlist_browsing = 0;
+	parent_object = NULL;
 }
 
 static void pl_state_change(sp_playlist *pl, void *userdata)
@@ -125,6 +114,7 @@ PHP_METHOD(SpotifyPlaylist, getTracks)
 	
 	playlist_array = return_value;
 	playlist_browse = p->playlist;
+	parent_object = object;
 	sp_playlist_add_callbacks(playlist_browse, &pl_callbacks, NULL);
 	playlist_browse_try();
 
@@ -194,6 +184,6 @@ void spotify_init_playlist(TSRMLS_D)
 	INIT_CLASS_ENTRY(ce, "SpotifyPlaylist", spotifyplaylist_methods);
 	spotifyplaylist_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	spotifyplaylist_ce->create_object = spotifyplaylist_create_handler;
-	memcpy(&spotify_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-	spotify_object_handlers.clone_obj = NULL;
+	//memcpy(&spotify_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+	//spotify_object_handlers.clone_obj = NULL;
 }

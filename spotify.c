@@ -210,6 +210,8 @@ PHP_MINIT_FUNCTION(spotify)
 	spotify_object_handlers.clone_obj = NULL;
 
 	spotify_init_playlist(TSRMLS_C);
+	spotify_init_track(TSRMLS_C);
+	spotify_init_artist(TSRMLS_C);
 
 	return SUCCESS;
 }

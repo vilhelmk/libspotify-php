@@ -27,9 +27,17 @@ typedef struct {
 	sp_playlist *playlist;
 } spotifyplaylist_object;
 
-//PHP_FUNCTION(spotify_init);
-//PHP_FUNCTION(spotify_destroy);
-//PHP_FUNCTION(spotify_get_starred_playlist);
+typedef struct {
+	zend_object std;
+	sp_session *session;
+	sp_track *track;
+} spotifytrack_object;
+
+typedef struct {
+	zend_object std;
+	sp_session *session;
+	sp_artist *artist;
+} spotifyartist_object;
 
 extern zend_module_entry spotify_module_entry;
 #define phpext_spotify_ptr &spotify_module_entry
@@ -40,6 +48,8 @@ extern void spotify_init_playlist(TSRMLS_D);
 
 extern zend_class_entry *spotify_ce;
 extern zend_class_entry *spotifyplaylist_ce;
+extern zend_class_entry *spotifytrack_ce;
+extern zend_class_entry *spotifyartist_ce;
 
 #if ZEND_MODULE_API_NO >= 20090115
 # define PUSH_PARAM(arg) zend_vm_stack_push(arg TSRMLS_CC)
