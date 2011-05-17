@@ -155,6 +155,121 @@ PHP_METHOD(Spotify, getStarredPlaylist)
 	SPOTIFY_METHOD2(SpotifyPlaylist, __construct, &temp, return_value, object, playlist);
 }
 
+static int has_entity_loaded;
+
+static void entity_loaded()
+{
+	has_entity_loaded = 1;
+}
+
+PHP_METHOD(Spotify, getPlaylistByURI)
+{
+	zval *uri, temp, *object = getThis();
+	int timeout = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &uri) == FAILURE) {
+		return;
+	}
+
+	spotify_object *p = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+	sp_link *link = sp_link_create_from_string(Z_STRVAL_P(uri));
+	if (NULL == link) {
+		RETURN_FALSE;
+	}
+
+	if (SP_LINKTYPE_PLAYLIST != sp_link_type(link)) {
+		RETURN_FALSE;
+	}
+
+	sp_playlist *playlist = sp_playlist_create(p->session, link);
+	if (NULL == playlist) {
+		RETURN_FALSE;
+	}
+
+	while (!sp_playlist_is_loaded(playlist)) {	
+		metadata_updated_fn = entity_loaded;
+		do {
+			sp_session_process_events(p->session, &timeout);
+		} while (has_entity_loaded != 1 || timeout == 0);
+		has_entity_loaded = 0;
+		metadata_updated_fn = NULL;
+	}
+
+	object_init_ex(return_value, spotifyplaylist_ce);
+	SPOTIFY_METHOD2(SpotifyPlaylist, __construct, &temp, return_value, object, playlist);
+}
+
+PHP_METHOD(Spotify, getTrackByURI)
+{
+	zval *uri, temp, *object = getThis();
+	int timeout = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &uri) == FAILURE) {
+		return;
+	}
+
+	spotify_object *p = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+	sp_link *link = sp_link_create_from_string(Z_STRVAL_P(uri));
+	if (NULL == link) {
+		RETURN_FALSE;		
+	}
+
+	if (SP_LINKTYPE_TRACK != sp_link_type(link)) {
+		RETURN_FALSE;
+	}
+
+	sp_track *track = sp_link_as_track(link);
+
+	while (!sp_track_is_loaded(track)) {
+		metadata_updated_fn = entity_loaded;
+		do {
+			sp_session_process_events(p->session, &timeout);
+		} while (has_entity_loaded != 1 || timeout == 0);
+		has_entity_loaded = 0;
+		metadata_updated_fn = NULL;
+	}
+	
+	object_init_ex(return_value, spotifytrack_ce);
+	SPOTIFY_METHOD2(SpotifyTrack, __construct, &temp, return_value, object, track);
+}
+
+PHP_METHOD(Spotify, getAlbumByURI)
+{
+	zval *uri, temp, *object = getThis();
+	int timeout = 0;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &uri) == FAILURE) {
+		return;
+	}
+
+	spotify_object *p = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+	sp_link *link = sp_link_create_from_string(Z_STRVAL_P(uri));
+	if (NULL == link) {
+		RETURN_FALSE;
+	}
+
+	if (SP_LINKTYPE_ALBUM != sp_link_type(link)) {
+		RETURN_FALSE;
+	}
+
+	sp_album *album = sp_link_as_album(link);
+
+	while (!sp_album_is_loaded(album)) {
+		metadata_updated_fn = entity_loaded;
+		do {
+			sp_session_process_events(p->session, &timeout);
+		} while (has_entity_loaded != 1 || timeout == 0);
+		has_entity_loaded = 0;
+		metadata_updated_fn = NULL;
+	}
+
+	object_init_ex(return_value, spotifyalbum_ce);
+	SPOTIFY_METHOD2(SpotifyAlbum, __construct, &temp, return_value, object, album);
+}
+
 static void logged_in(sp_session *session, sp_error error)
 {
 	is_logged_in = 1;
@@ -167,11 +282,14 @@ static void logged_in(sp_session *session, sp_error error)
 }
 
 function_entry spotify_methods[] = {
-    PHP_ME(Spotify, __construct,            NULL,   ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Spotify, __construct,            NULL,   ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
 	PHP_ME(Spotify, __destruct,				NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(Spotify, getPlaylists,			NULL,	ZEND_ACC_PUBLIC)
-    PHP_ME(Spotify, getStarredPlaylist,     NULL,   ZEND_ACC_PUBLIC)
-    {NULL, NULL, NULL}
+	PHP_ME(Spotify, getStarredPlaylist,     NULL,   ZEND_ACC_PUBLIC)
+	PHP_ME(Spotify, getPlaylistByURI,		NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(Spotify, getTrackByURI,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(Spotify, getAlbumByURI,			NULL,	ZEND_ACC_PUBLIC)
+	{NULL, NULL, NULL}
 };
 
 void spotify_free_storage(void *object TSRMLS_DC)
