@@ -120,21 +120,15 @@ PHP_METHOD(Spotify, __destruct)
 
 PHP_METHOD(Spotify, getPlaylists)
 {
-	zval *object = getThis(), temp;
-	int timeout = 0, i, num_playlists;
+	zval *object = getThis();
+
 	spotify_object *obj = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
-
-	do {
-		sp_session_process_events(obj->session, &timeout);		
-	} while (timeout == 0);
-
-	sp_playlistcontainer *container = sp_session_playlistcontainer(obj->session);
-	num_playlists = sp_playlistcontainer_num_playlists(container);
 
 	container_browse_data pcfg;
 	pcfg.session = obj->session;
 	pcfg.obj = object;
 
+	sp_playlistcontainer *container = sp_session_playlistcontainer(obj->session);
 	get_playlistcontainer_playlists(return_value, &pcfg, container);
 }
 
