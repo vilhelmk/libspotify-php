@@ -1,7 +1,8 @@
 #include "php_spotify.h"
 
+zend_class_entry *spotify_ce;
 zend_object_handlers spotify_object_handlers;
-
+static int is_logged_in;
 
 static void logged_in(sp_session *session, sp_error error) ;
 
@@ -25,10 +26,6 @@ static sp_session_callbacks callbacks = {
 	NULL,
 	NULL
 };
-
-zend_class_entry *spotify_ce;
-
-int is_logged_in;
 
 PHP_METHOD(Spotify, __construct)
 {
