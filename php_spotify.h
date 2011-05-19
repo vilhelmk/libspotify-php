@@ -44,6 +44,7 @@ typedef struct {
 	zend_object std;
 	sp_session *session;
 	sp_album *album;
+	sp_albumbrowse *albumbrowse;
 } spotifyalbum_object;
 
 typedef struct {
@@ -74,7 +75,6 @@ extern zend_class_entry *spotifyuser_ce;
 extern void (*metadata_updated_fn)(void);
 
 extern void get_playlistcontainer_playlists(zval *return_value, container_browse_data *p, sp_playlistcontainer *pc); 
-extern void browse_album_get_tracks(zval *return_value, container_browse_data *p, sp_album *album);
 
 #if ZEND_MODULE_API_NO >= 20090115
 # define PUSH_PARAM(arg) zend_vm_stack_push(arg TSRMLS_CC)

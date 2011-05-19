@@ -2,6 +2,8 @@
 
 zend_class_entry *spotifyalbum_ce;
 
+PHP_METHOD(SpotifyAlbum, browseAlbum);
+
 PHP_METHOD(SpotifyAlbum, __construct)
 {
 	zval *object = getThis();
@@ -16,6 +18,16 @@ PHP_METHOD(SpotifyAlbum, __construct)
 	spotifyalbum_object *obj = (spotifyalbum_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
 	obj->album = album;
+	obj->albumbrowse = NULL;
+}
+
+PHP_METHOD(SpotifyAlbum, __destruct)
+{
+	spotifyalbum_object *obj = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	if (obj->albumbrowse != NULL) {
+		sp_albumbrowse_release(obj->albumbrowse);
+	}
 }
 
 PHP_METHOD(SpotifyAlbum, getName)
@@ -46,17 +58,32 @@ PHP_METHOD(SpotifyAlbum, getArtist)
 
 PHP_METHOD(SpotifyAlbum, getNumTracks)
 {
+	zval tempretval, *thisptr = getThis();
+	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
+	SPOTIFY_METHOD(SpotifyAlbum, browseAlbum, &tempretval, thisptr);
+	RETURN_LONG(sp_albumbrowse_num_tracks(p->albumbrowse));
 }
 
 PHP_METHOD(SpotifyAlbum, getTracks)
 {
-	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
-	
-	container_browse_data pcfg;
-	pcfg.session = p->session;
-	pcfg.obj = getThis();
+	int num_tracks, i;
+	zval tempretval, *thisptr = getThis();
 
-	browse_album_get_tracks(return_value, &pcfg, p->album);
+	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
+
+	SPOTIFY_METHOD(SpotifyAlbum, browseAlbum, &tempretval, thisptr);
+
+	array_init(return_value);
+
+	num_tracks = sp_albumbrowse_num_tracks(p->albumbrowse);
+
+	for (i=0; i<num_tracks; i++) {
+		zval *z_track;
+		ALLOC_INIT_ZVAL(z_track);
+		object_init_ex(z_track, spotifytrack_ce);
+		SPOTIFY_METHOD2(SpotifyTrack, __construct, &tempretval, z_track, thisptr, sp_albumbrowse_track(p->albumbrowse, i));
+		add_next_index_zval(return_value, z_track);
+	}
 }
 
 PHP_METHOD(SpotifyAlbum, getType)
@@ -71,14 +98,39 @@ PHP_METHOD(SpotifyAlbum, __toString)
 	RETURN_STRING(sp_album_name(p->album), 1);
 }
 
+static void albumbrowse_complete(sp_albumbrowse *result, void *userdata)
+{
+	spotifyalbum_object *p = (spotifyalbum_object*)userdata;
+	p->albumbrowse = result;
+}
+
+PHP_METHOD(SpotifyAlbum, browseAlbum)
+{
+	int timeout = 0;
+
+	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	if (p->albumbrowse != NULL) {
+		RETURN_TRUE;
+	}
+
+	sp_albumbrowse *tmpbrowse = sp_albumbrowse_create(p->session, p->album, albumbrowse_complete, p);
+	while (!sp_albumbrowse_is_loaded(tmpbrowse)) {
+		sp_session_process_events(p->session, &timeout);
+	}
+
+	RETURN_TRUE;
+}
+
 function_entry spotifyalbum_methods[] = {
 	PHP_ME(SpotifyAlbum, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
+	PHP_ME(SpotifyAlbum, __destruct,		NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyAlbum, getName,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbum, getYear,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbum, getArtist,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbum, getNumTracks,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbum, getTracks,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbum, getType,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbum, browseAlbum,		NULL,	ZEND_ACC_PRIVATE)
 	PHP_ME(SpotifyAlbum, __toString,		NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
