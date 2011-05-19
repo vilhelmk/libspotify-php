@@ -2,9 +2,12 @@
 
 zend_class_entry *spotify_ce;
 zend_object_handlers spotify_object_handlers;
-static int is_logged_in;
+static int is_logged_in, is_logged_out;
 
-static void logged_in(sp_session *session, sp_error error) ;
+static void playlistcontainer_complete(sp_playlistcontainer *pc, void *userdata);
+static void logged_in(sp_session *session, sp_error error);
+static void logged_out(sp_session *session);
+static void log_message(sp_session *session, const char *data);
 
 void (*metadata_updated_fn)(void);
 
@@ -17,14 +20,14 @@ static void metadata_updated(sp_session *sess)
 
 static sp_session_callbacks callbacks = {
 	&logged_in,
-	NULL,
+	&logged_out,
 	&metadata_updated,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
-	NULL
+	&log_message
 };
 
 PHP_METHOD(Spotify, __construct)
@@ -92,6 +95,7 @@ PHP_METHOD(Spotify, __construct)
 
 	obj->session = session;
 	obj->timeout = 0;
+	obj->playlistcontainer = NULL;
 
 	do {
 		sp_session_process_events(obj->session, &obj->timeout);
@@ -103,33 +107,51 @@ PHP_METHOD(Spotify, __destruct)
 	spotify_object *obj = (spotify_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
 	int timeout = 0;
 
+	if (obj->playlistcontainer != NULL) {
+		//sp_playlistcontainer_release(obj->playlistcontainer);
+	}
+
     do {
         sp_session_process_events(obj->session, &timeout);
     } while (timeout == 0);
 
 	sp_session_logout(obj->session);
-	//sp_session_release(g_session);
 
 	timeout = 0;
 	do {
 		sp_session_process_events(obj->session, &timeout);
-	} while (timeout == 0);
+	} while (!is_logged_out || timeout == 0);
+
+	sp_session_release(obj->session);
 
 	efree(obj->key_data);
 }
 
 PHP_METHOD(Spotify, getPlaylists)
 {
-	zval *object = getThis();
+	zval *thisptr = getThis(), tempretval;
+	int i, timeout = 0, num_playlists;
 
-	spotify_object *obj = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
+	spotify_object *p = (spotify_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
 
-	container_browse_data pcfg;
-	pcfg.session = obj->session;
-	pcfg.obj = object;
+	SPOTIFY_METHOD(Spotify, initPlaylistContainer, &tempretval, thisptr);
 
-	sp_playlistcontainer *container = sp_session_playlistcontainer(obj->session);
-	get_playlistcontainer_playlists(return_value, &pcfg, container);
+	array_init(return_value);
+
+	num_playlists = sp_playlistcontainer_num_playlists(p->playlistcontainer);
+	for (i=0; i<num_playlists; i++) {
+		sp_playlist *playlist = sp_playlistcontainer_playlist(p->playlistcontainer, i);
+
+		while (!sp_playlist_is_loaded(playlist)) {
+			sp_session_process_events(p->session, &timeout);
+		}
+
+		zval *z_playlist;
+		ALLOC_INIT_ZVAL(z_playlist);
+		object_init_ex(z_playlist, spotifyplaylist_ce);
+		SPOTIFY_METHOD2(SpotifyPlaylist, __construct, &tempretval, z_playlist, thisptr, playlist);
+		add_next_index_zval(return_value, z_playlist);
+	}
 }
 
 PHP_METHOD(Spotify, getStarredPlaylist)
@@ -264,15 +286,61 @@ PHP_METHOD(Spotify, getAlbumByURI)
 	SPOTIFY_METHOD2(SpotifyAlbum, __construct, &temp, return_value, object, album);
 }
 
+static sp_playlistcontainer_callbacks playlistcontainer_callbacks = {
+	NULL,
+	NULL,
+	NULL,
+	playlistcontainer_complete
+};
+
+static void playlistcontainer_complete(sp_playlistcontainer *pc, void *userdata)
+{
+	spotify_object *p = (spotify_object*)userdata;
+	p->playlistcontainer = pc;
+	sp_playlistcontainer_remove_callbacks(pc, &playlistcontainer_callbacks, userdata);
+}
+
+PHP_METHOD(Spotify, initPlaylistContainer)
+{
+	int timeout = 0;
+
+	spotify_object *p = (spotify_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	if (p->playlistcontainer != NULL) {
+		RETURN_TRUE;
+	}
+
+	sp_playlistcontainer *tempcontainer = sp_session_playlistcontainer(p->session);
+	sp_playlistcontainer_add_callbacks(tempcontainer, &playlistcontainer_callbacks, p);
+
+	while (p->playlistcontainer == NULL) {
+		sp_session_process_events(p->session, &timeout);
+	}
+
+	RETURN_TRUE;
+}
+
 static void logged_in(sp_session *session, sp_error error)
 {
 	is_logged_in = 1;
 
 	if (SP_ERROR_OK != error) {
+		is_logged_out = 1;
+
 		char *errMsg;
 		spprintf(&errMsg, 0, "login failed: %s", sp_error_message(error));
+		sp_session_release(session);
 		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), errMsg, 0 TSRMLS_CC);
 	}
+}
+
+static void logged_out(sp_session *session)
+{
+	is_logged_out = 1;
+}
+
+static void log_message(sp_session *session, const char *data)
+{
+	//php_printf("SPOTIFY_ERR: %s\n", data);
 }
 
 function_entry spotify_methods[] = {
@@ -283,6 +351,7 @@ function_entry spotify_methods[] = {
 	PHP_ME(Spotify, getPlaylistByURI,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(Spotify, getTrackByURI,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(Spotify, getAlbumByURI,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(Spotify, initPlaylistContainer,	NULL,	ZEND_ACC_PRIVATE)
 	{NULL, NULL, NULL}
 };
 

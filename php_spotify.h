@@ -20,6 +20,7 @@ typedef struct {
     int is_logged_in;
     int timeout;
 	char *key_data;
+	sp_playlistcontainer *playlistcontainer;
 } spotify_object;
 
 typedef struct {
