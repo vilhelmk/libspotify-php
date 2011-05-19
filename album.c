@@ -28,6 +28,8 @@ PHP_METHOD(SpotifyAlbum, __destruct)
 	if (obj->albumbrowse != NULL) {
 		sp_albumbrowse_release(obj->albumbrowse);
 	}
+
+	sp_album_release(obj->album);
 }
 
 PHP_METHOD(SpotifyAlbum, getName)

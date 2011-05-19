@@ -18,6 +18,12 @@ PHP_METHOD(SpotifyUser, __construct)
 	obj->user = user;
 }
 
+PHP_METHOD(SpotifyUser, __destruct)
+{
+	spotifyuser_object *p = (spotifyuser_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	sp_user_release(p->user);
+}
+
 PHP_METHOD(SpotifyUser, getName)
 {
 	zval *object = getThis();
@@ -54,6 +60,7 @@ PHP_METHOD(SpotifyUser, __toString)
 
 function_entry spotifyuser_methods[] = {
 	PHP_ME(SpotifyUser, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
+	PHP_ME(SpotifyUser, __destruct,			NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyUser, getName,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyUser, getCanonicalName,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyUser, getFullName,		NULL,	ZEND_ACC_PUBLIC)

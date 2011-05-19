@@ -98,6 +98,12 @@ PHP_METHOD(SpotifyPlaylist, __construct)
 	obj->playlist = playlist;
 }
 
+PHP_METHOD(SpotifyPlaylist, __destruct)
+{
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	sp_playlist_release(p->playlist);
+}
+
 PHP_METHOD(SpotifyPlaylist, getName)
 {
 	zval *object = getThis();
@@ -230,6 +236,7 @@ PHP_METHOD(SpotifyPlaylist, __toString)
 
 function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
+	PHP_ME(SpotifyPlaylist, __destruct,			NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyPlaylist, getName,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getTracks,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getOwner,			NULL,	ZEND_ACC_PUBLIC)

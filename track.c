@@ -18,6 +18,12 @@ PHP_METHOD(SpotifyTrack, __construct)
 	obj->track = track;
 }
 
+PHP_METHOD(SpotifyTrack, __destruct)
+{
+	spotifytrack_object *obj = (spotifytrack_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	sp_track_release(obj->track);
+}
+
 PHP_METHOD(SpotifyTrack, getName)
 {
 	zval *object = getThis();
@@ -126,6 +132,7 @@ PHP_METHOD(SpotifyTrack, __toString)
 
 function_entry spotifytrack_methods[] = {
 	PHP_ME(SpotifyTrack, __construct,            NULL,   ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
+	PHP_ME(SpotifyTrack, __destruct,	NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyTrack, getName,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getURI,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getAlbum,		NULL,	ZEND_ACC_PUBLIC)
