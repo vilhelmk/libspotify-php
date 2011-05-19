@@ -19,6 +19,7 @@ typedef struct {
     sp_session *session;
     int is_logged_in;
     int timeout;
+	char *key_data;
 } spotify_object;
 
 typedef struct {

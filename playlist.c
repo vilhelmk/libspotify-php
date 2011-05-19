@@ -213,6 +213,8 @@ PHP_METHOD(SpotifyPlaylist, addTrack)
 
 	error = sp_playlist_add_tracks(p->playlist, tracks, 1, position, p->session);
 
+	efree(tracks);
+
 	if (SP_ERROR_OK == error) {
 		RETURN_TRUE;
 	} else {

@@ -41,7 +41,9 @@ PHP_METHOD(Spotify, __construct)
 	sp_session *session;
 	FILE *fp;
 	long key_size;
-	char *key_data, *key_filename;
+	char *key_filename;
+
+	spotify_object *obj = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
 
 	memset(&config, 0, sizeof(config));
 	config.api_version = SPOTIFY_API_VERSION;
@@ -67,15 +69,15 @@ PHP_METHOD(Spotify, __construct)
 		return;
 	}
 
-	key_data = (char*)emalloc(sizeof(char) * key_size);
-	if (fread(key_data, 1, key_size, fp) != key_size) {
+	obj->key_data = (char*)emalloc(sizeof(char) * key_size);
+	if (fread(obj->key_data, 1, key_size, fp) != key_size) {
 		fclose(fp);
 		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "failed reading key file", 0 TSRMLS_CC);
 		return;
 	}
 	fclose(fp);
 
-	config.application_key = key_data;
+	config.application_key = obj->key_data;
 	config.application_key_size = key_size;
 
 	config.callbacks = &callbacks;
@@ -88,7 +90,6 @@ PHP_METHOD(Spotify, __construct)
 
 	sp_session_login(session, Z_STRVAL_P(z_user), Z_STRVAL_P(z_pass));
 
-	spotify_object *obj = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = session;
 	obj->timeout = 0;
 
@@ -113,6 +114,8 @@ PHP_METHOD(Spotify, __destruct)
 	do {
 		sp_session_process_events(obj->session, &timeout);
 	} while (timeout == 0);
+
+	efree(obj->key_data);
 }
 
 PHP_METHOD(Spotify, getPlaylists)
