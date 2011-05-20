@@ -30,3 +30,7 @@
 		printf("%s\n", $playlist->getName());
 		// print_r($playlist->getTracks());
 	}
+
+## Credits
+
+Vilhelm K. Vardøy <vilhelmkv@gmail.com>
