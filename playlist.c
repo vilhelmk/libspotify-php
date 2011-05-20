@@ -190,6 +190,29 @@ PHP_METHOD(SpotifyPlaylist, addTrack)
 	}
 }
 
+PHP_METHOD(SpotifyPlaylist, removeTrack)
+{
+	zval *z_index;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &z_index) == FAILURE) {
+		return;
+	}
+
+	int *tracks = (int*)emalloc(sizeof(int) * 1);
+	tracks[0] = Z_LVAL_P(z_index);
+
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	sp_error error = sp_playlist_remove_tracks(p->playlist, tracks, 1);
+
+	efree(tracks);
+
+	if (SP_ERROR_OK == error) {
+		RETURN_TRUE;
+	} else {
+		RETURN_FALSE;
+	}
+}
+
 PHP_METHOD(SpotifyPlaylist, browse)
 {
 	int timeout = 0;
@@ -221,6 +244,7 @@ function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, setCollaborative,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, rename,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, addTrack,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, removeTrack,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, browse,				NULL,	ZEND_ACC_PRIVATE)
 	PHP_ME(SpotifyPlaylist, __toString,			NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
