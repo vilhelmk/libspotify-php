@@ -2,86 +2,6 @@
 
 zend_class_entry *spotifyplaylist_ce;
 
-static sp_playlist *playlist_browse;
-static sp_playlist_callbacks pl_callbacks;
-static zval *playlist_array, *parent_object;
-static int playlist_browsing;
-
-static void playlist_browse_try(void) {
-    int i, tracks;
-	zval temp;
-
-    playlist_browsing = 1;
-    metadata_updated_fn = playlist_browse_try;
-
-    if (!sp_playlist_is_loaded(playlist_browse)) {
-        return;
-    }
-
-    tracks = sp_playlist_num_tracks(playlist_browse);
-    for (i=0; i<tracks; i++) {
-        sp_track *t = sp_playlist_track(playlist_browse, i);
-        if (!sp_track_is_loaded(t))
-            return;
-    }
-
-    array_init(playlist_array);
-
-    for (i=0; i<tracks; i++) {
-		zval *track;
-        sp_track *t = sp_playlist_track(playlist_browse, i);
-		if (NULL == t) {
-			continue;
-		}
-
-		ALLOC_INIT_ZVAL(track);
-		object_init_ex(track, spotifytrack_ce);
-		SPOTIFY_METHOD2(SpotifyTrack, __construct, &temp, track, parent_object, t);
-
-        add_next_index_zval(playlist_array, track);
-	}
-
-    sp_playlist_remove_callbacks(playlist_browse, &pl_callbacks, NULL);
-    sp_playlist_release(playlist_browse);
-
-    playlist_browse = NULL;
-    metadata_updated_fn = NULL;
-    playlist_browsing = 0;
-	parent_object = NULL;
-}
-
-static void pl_state_change(sp_playlist *pl, void *userdata)
-{
-    playlist_browse_try();
-}
-
-static void pl_tracks_added(sp_playlist *pl, sp_track * const * tracks,
-                int num_tracks, int position, void *userdata)
-{
-}
-
-static void pl_tracks_removed(sp_playlist *pl, const int *tracks,
-                  int num_tracks, void *userdata)
-{
-}
-
-static void pl_tracks_moved(sp_playlist *pl, const int *tracks,
-                int num_tracks, int new_position, void *userdata)
-{
-}
-
-static void pl_renamed(sp_playlist *pl, void *userdata)
-{
-}
-
-static sp_playlist_callbacks pl_callbacks = {
-    pl_tracks_added,
-    pl_tracks_removed,
-    pl_tracks_moved,
-    pl_renamed,
-    pl_state_change,
-};
-
 PHP_METHOD(SpotifyPlaylist, __construct)
 {
 	zval *object = getThis();
@@ -114,19 +34,28 @@ PHP_METHOD(SpotifyPlaylist, getName)
 
 PHP_METHOD(SpotifyPlaylist, getTracks)
 {
-	zval *object = getThis();
-	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(object TSRMLS_CC);
-	
-	playlist_array = return_value;
-	playlist_browse = p->playlist;
-	parent_object = object;
-	sp_playlist_add_callbacks(playlist_browse, &pl_callbacks, NULL);
-	playlist_browse_try();
+	int i, num_tracks, timeout = 0;
+	zval *thisptr = getThis(), tempretval;
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
 
-	int timeout = 0;
-	while (playlist_browsing) {
-		sp_session_process_events(p->session, &timeout);
-	} 
+	SPOTIFY_METHOD(SpotifyPlaylist, browse, &tempretval, thisptr);
+
+	array_init(return_value);
+
+	num_tracks = sp_playlist_num_tracks(p->playlist);
+	for (i=0; i<num_tracks; i++) {
+		sp_track *track = sp_playlist_track(p->playlist, i);
+		while (!sp_track_is_loaded(track)) {
+			sp_session_process_events(p->session, &timeout);
+		}
+
+		zval *z_track;
+		ALLOC_INIT_ZVAL(z_track);
+		object_init_ex(z_track, spotifytrack_ce);
+		SPOTIFY_METHOD2(SpotifyTrack, __construct, &tempretval, z_track, thisptr, track);
+
+		add_next_index_zval(return_value, z_track);
+	}
 }
 
 PHP_METHOD(SpotifyPlaylist, getOwner)
@@ -228,6 +157,17 @@ PHP_METHOD(SpotifyPlaylist, addTrack)
 	}
 }
 
+PHP_METHOD(SpotifyPlaylist, browse)
+{
+	int timeout = 0;
+
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	while (!sp_playlist_is_loaded(p->playlist)) {
+		sp_session_process_events(p->session, &timeout);
+	}
+}
+
 PHP_METHOD(SpotifyPlaylist, __toString)
 {
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -246,6 +186,7 @@ function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, setCollaborative,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, rename,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, addTrack,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, browse,				NULL,	ZEND_ACC_PRIVATE)
 	PHP_ME(SpotifyPlaylist, __toString,			NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
