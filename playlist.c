@@ -82,6 +82,39 @@ PHP_METHOD(SpotifyPlaylist, getNumSubscribers)
 	RETURN_LONG(sp_playlist_num_subscribers(p->playlist));
 }
 
+PHP_METHOD(SpotifyPlaylist, getTrackCreateTime)
+{
+	int index;
+	zval *z_index;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &z_index) == FAILURE) {
+		return;
+	}
+
+
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	RETURN_LONG(sp_playlist_track_create_time(p->playlist, Z_LVAL_P(z_index)));
+}
+
+PHP_METHOD(SpotifyPlaylist, getTrackCreator)
+{
+	int index;
+	zval *z_user, *thisptr = getThis(), tempretval;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) == FAILURE) {
+		return;
+	}
+
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
+	z_user = sp_playlist_track_creator(p->playlist, index);
+	if (!z_user) {
+		RETURN_FALSE;
+	}
+
+	object_init_ex(return_value, spotifyuser_ce);
+	SPOTIFY_METHOD2(SpotifyUser, __construct, &tempretval, return_value, thisptr, z_user);
+}
+
 PHP_METHOD(SpotifyPlaylist, isCollaborative)
 {
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -182,6 +215,8 @@ function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, getOwner,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getDescription,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getNumSubscribers,	NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, getTrackCreateTime,	NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, getTrackCreator,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, isCollaborative,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, setCollaborative,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, rename,				NULL,	ZEND_ACC_PUBLIC)

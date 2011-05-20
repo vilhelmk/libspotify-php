@@ -295,6 +295,7 @@ static void logged_in(sp_session *session, sp_error error)
 
 	if (SP_ERROR_OK != error) {
 		p->is_logged_out = 1;
+		sp_session_release(session);
 
 		char *errMsg;
 		spprintf(&errMsg, 0, "login failed: %s", sp_error_message(error));
