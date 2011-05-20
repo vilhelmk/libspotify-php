@@ -18,17 +18,21 @@
 
     $spotify = new Spotify("/path/to/key.file", "username", "password");
     
-    // All tracks in the starred playlist
-    $starredPlaylist = $spotify->getStarredPlaylist(); // returns SpotifyPlaylist
-    foreach ($starredPlaylist as $track) {
-        printf("%s - %s\n", $track->getArtist(), $track);
-    }
+	$coolTrack = $spotify->getTrackByURI('spotify:track:6JEK0CvvjDjjMUBFoXShNZ');
      
 	// List all playlists
 	$playlists = $spotify->getPlaylists(); // returns array of SpotifyPlaylist
 	foreach ($playlists as $playlist) {
-		printf("%s\n", $playlist->getName());
-		// print_r($playlist->getTracks());
+		printf("%s (%d tracks, by %s)\n", $playlist, $playlist->getNumTracks(), %playlist->getOwner());
+
+		foreach ($playlist->getTracks() as $track) {
+			$duration = $track->getDuration();
+			printf("  -> %s - %s [%02d:%02d]\n", $track->getArtist(), $track,
+					$duration/60, $duration%60);
+		}
+
+		// and add a important piece of music
+		$playlist->addTrack($coolTrack, 0 /*position*/);
 	}
 
 ## Credits

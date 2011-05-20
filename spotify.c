@@ -156,10 +156,6 @@ PHP_METHOD(Spotify, getPlaylists)
 	for (i=0; i<num_playlists; i++) {
 		sp_playlist *playlist = sp_playlistcontainer_playlist(p->playlistcontainer, i);
 
-		while (!sp_playlist_is_loaded(playlist)) {
-			sp_session_process_events(p->session, &timeout);
-		}
-
 		zval *z_playlist;
 		ALLOC_INIT_ZVAL(z_playlist);
 		object_init_ex(z_playlist, spotifyplaylist_ce);
@@ -340,7 +336,7 @@ static void logged_out(sp_session *session)
 
 static void log_message(sp_session *session, const char *data)
 {
-	//php_printf("SPOTIFY_ERR: %s\n", data);
+	//php_printf("SPOTIFY_DEBUG: %s", data);
 }
 
 function_entry spotify_methods[] = {

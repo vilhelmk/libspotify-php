@@ -32,6 +32,7 @@ PHP_METHOD(SpotifyPlaylist, __construct)
 	zval *object = getThis();
 	zval *parent;
 	sp_playlist *playlist;
+	int timeout = 0;
 	
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Oz", &parent, spotify_ce, &playlist) == FAILURE) {
 		return;
@@ -41,6 +42,10 @@ PHP_METHOD(SpotifyPlaylist, __construct)
 	spotifyplaylist_object *obj = (spotifyplaylist_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
 	obj->playlist = playlist;
+
+	while (!sp_playlist_is_loaded(playlist)) {
+		sp_session_process_events(p->session, &timeout);
+	}
 
 	sp_playlist_add_ref(obj->playlist);
 }
@@ -103,10 +108,10 @@ PHP_METHOD(SpotifyPlaylist, getDescription)
 	RETURN_STRING(sp_playlist_get_description(p->playlist), 1);
 }
 
-PHP_METHOD(SpotifyPlaylist, getNumSubscribers)
+PHP_METHOD(SpotifyPlaylist, getNumTracks)
 {
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
-	RETURN_LONG(sp_playlist_num_subscribers(p->playlist));
+	RETURN_LONG(sp_playlist_num_tracks(p->playlist));
 }
 
 PHP_METHOD(SpotifyPlaylist, getTrackCreateTime)
@@ -117,7 +122,6 @@ PHP_METHOD(SpotifyPlaylist, getTrackCreateTime)
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &z_index) == FAILURE) {
 		return;
 	}
-
 
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
 	RETURN_LONG(sp_playlist_track_create_time(p->playlist, Z_LVAL_P(z_index)));
@@ -198,6 +202,8 @@ PHP_METHOD(SpotifyPlaylist, addTrack)
 	spotifytrack_object *track_obj = (spotifytrack_object*)zend_object_store_get_object(track TSRMLS_CC);
 	tracks[0] = track_obj->track;
 
+	sp_track_add_ref(track_obj->track);
+
 	int position;
 
 	if (Z_TYPE_P(z_position) == IS_NULL || Z_LVAL_P(z_position) < 0) {
@@ -264,7 +270,7 @@ function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, getTracks,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getOwner,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getDescription,		NULL,	ZEND_ACC_PUBLIC)
-	PHP_ME(SpotifyPlaylist, getNumSubscribers,	NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, getNumTracks,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getTrackCreateTime,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getTrackCreator,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, isCollaborative,	NULL,	ZEND_ACC_PUBLIC)
