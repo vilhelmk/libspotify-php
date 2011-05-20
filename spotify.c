@@ -171,13 +171,6 @@ PHP_METHOD(Spotify, getStarredPlaylist)
 	SPOTIFY_METHOD2(SpotifyPlaylist, __construct, &temp, return_value, object, playlist);
 }
 
-static int has_entity_loaded;
-
-static void entity_loaded()
-{
-	has_entity_loaded = 1;
-}
-
 PHP_METHOD(Spotify, getPlaylistByURI)
 {
 	zval *uri, temp, *object = getThis();
@@ -204,12 +197,7 @@ PHP_METHOD(Spotify, getPlaylistByURI)
 	}
 
 	while (!sp_playlist_is_loaded(playlist)) {	
-		metadata_updated_fn = entity_loaded;
-		do {
-			sp_session_process_events(p->session, &timeout);
-		} while (has_entity_loaded != 1 || timeout == 0);
-		has_entity_loaded = 0;
-		metadata_updated_fn = NULL;
+		sp_session_process_events(p->session, &timeout);
 	}
 
 	object_init_ex(return_value, spotifyplaylist_ce);
@@ -239,12 +227,7 @@ PHP_METHOD(Spotify, getTrackByURI)
 	sp_track *track = sp_link_as_track(link);
 
 	while (!sp_track_is_loaded(track)) {
-		metadata_updated_fn = entity_loaded;
-		do {
-			sp_session_process_events(p->session, &timeout);
-		} while (has_entity_loaded != 1 || timeout == 0);
-		has_entity_loaded = 0;
-		metadata_updated_fn = NULL;
+		sp_session_process_events(p->session, &timeout);
 	}
 	
 	object_init_ex(return_value, spotifytrack_ce);
@@ -274,12 +257,7 @@ PHP_METHOD(Spotify, getAlbumByURI)
 	sp_album *album = sp_link_as_album(link);
 
 	while (!sp_album_is_loaded(album)) {
-		metadata_updated_fn = entity_loaded;
-		do {
-			sp_session_process_events(p->session, &timeout);
-		} while (has_entity_loaded != 1 || timeout == 0);
-		has_entity_loaded = 0;
-		metadata_updated_fn = NULL;
+		sp_session_process_events(p->session, &timeout);
 	}
 
 	object_init_ex(return_value, spotifyalbum_ce);
