@@ -2,7 +2,6 @@
 
 zend_class_entry *spotify_ce;
 zend_object_handlers spotify_object_handlers;
-static int is_logged_in, is_logged_out;
 
 static void playlistcontainer_complete(sp_playlistcontainer *pc, void *userdata);
 static void logged_in(sp_session *session, sp_error error);
@@ -73,8 +72,9 @@ PHP_METHOD(Spotify, __construct)
 
 	config.application_key = obj->key_data;
 	config.application_key_size = key_size;
-
+	
 	config.callbacks = &callbacks;
+	config.userdata = obj;
 
 	error = sp_session_create(&config, &session);
 	if (SP_ERROR_OK != error) {
@@ -90,7 +90,7 @@ PHP_METHOD(Spotify, __construct)
 
 	do {
 		sp_session_process_events(obj->session, &obj->timeout);
-	} while (obj->timeout == 0 || !is_logged_in);
+	} while (obj->timeout == 0 || !obj->is_logged_in);
 }
 
 PHP_METHOD(Spotify, __destruct)
@@ -111,7 +111,7 @@ PHP_METHOD(Spotify, __destruct)
 	timeout = 0;
 	do {
 		sp_session_process_events(obj->session, &timeout);
-	} while (!is_logged_out || timeout == 0);
+	} while (!obj->is_logged_out || timeout == 0);
 
 	sp_session_release(obj->session);
 
@@ -290,21 +290,22 @@ PHP_METHOD(Spotify, initPlaylistContainer)
 
 static void logged_in(sp_session *session, sp_error error)
 {
-	is_logged_in = 1;
+	spotify_object *p = sp_session_userdata(session);
+	p->is_logged_in = 1;
 
 	if (SP_ERROR_OK != error) {
-		is_logged_out = 1;
+		p->is_logged_out = 1;
 
 		char *errMsg;
 		spprintf(&errMsg, 0, "login failed: %s", sp_error_message(error));
-		sp_session_release(session);
 		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), errMsg, 0 TSRMLS_CC);
 	}
 }
 
 static void logged_out(sp_session *session)
 {
-	is_logged_out = 1;
+	spotify_object *p = sp_session_userdata(session);
+	p->is_logged_out = 1;
 }
 
 static void log_message(sp_session *session, const char *data)

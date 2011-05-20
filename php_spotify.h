@@ -17,10 +17,11 @@
 typedef struct {
     zend_object std;
     sp_session *session;
-    int is_logged_in;
     int timeout;
 	char *key_data;
 	sp_playlistcontainer *playlistcontainer;
+	int is_logged_in;
+	int is_logged_out;
 } spotify_object;
 
 typedef struct {
