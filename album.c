@@ -19,6 +19,8 @@ PHP_METHOD(SpotifyAlbum, __construct)
 	obj->session = p->session;
 	obj->album = album;
 	obj->albumbrowse = NULL;
+
+	sp_album_add_ref(obj->album);
 }
 
 PHP_METHOD(SpotifyAlbum, __destruct)
@@ -80,10 +82,12 @@ PHP_METHOD(SpotifyAlbum, getTracks)
 	num_tracks = sp_albumbrowse_num_tracks(p->albumbrowse);
 
 	for (i=0; i<num_tracks; i++) {
+		sp_track *track = sp_albumbrowse_track(p->albumbrowse, i);
+
 		zval *z_track;
 		ALLOC_INIT_ZVAL(z_track);
 		object_init_ex(z_track, spotifytrack_ce);
-		SPOTIFY_METHOD2(SpotifyTrack, __construct, &tempretval, z_track, thisptr, sp_albumbrowse_track(p->albumbrowse, i));
+		SPOTIFY_METHOD2(SpotifyTrack, __construct, &tempretval, z_track, thisptr, track);
 		add_next_index_zval(return_value, z_track);
 	}
 }

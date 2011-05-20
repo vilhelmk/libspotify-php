@@ -16,6 +16,8 @@ PHP_METHOD(SpotifyArtist, __construct)
 	spotifyartist_object *obj = (spotifyartist_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
 	obj->artist = artist;
+
+	sp_artist_add_ref(obj->artist);
 }
 
 PHP_METHOD(SpotifyArtist, __destruct)

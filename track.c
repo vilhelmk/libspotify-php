@@ -16,6 +16,8 @@ PHP_METHOD(SpotifyTrack, __construct)
 	spotifytrack_object *obj = (spotifytrack_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
 	obj->track = track;
+
+	sp_track_add_ref(obj->track);
 }
 
 PHP_METHOD(SpotifyTrack, __destruct)
@@ -40,6 +42,7 @@ PHP_METHOD(SpotifyTrack, getURI)
 	// TODO add support for offset in the track link
 	sp_link *link = sp_link_create_from_track(p->track, 0);
 	sp_link_as_string(link, uri, 256);
+	sp_link_release(link);
 
 	RETURN_STRING(uri, 1);
 }

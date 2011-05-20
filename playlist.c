@@ -16,6 +16,8 @@ PHP_METHOD(SpotifyPlaylist, __construct)
 	spotifyplaylist_object *obj = (spotifyplaylist_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
 	obj->playlist = playlist;
+
+	sp_playlist_add_ref(obj->playlist);
 }
 
 PHP_METHOD(SpotifyPlaylist, __destruct)
@@ -99,20 +101,20 @@ PHP_METHOD(SpotifyPlaylist, getTrackCreateTime)
 PHP_METHOD(SpotifyPlaylist, getTrackCreator)
 {
 	int index;
-	zval *z_user, *thisptr = getThis(), tempretval;
+	zval *thisptr = getThis(), tempretval;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) == FAILURE) {
 		return;
 	}
 
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
-	z_user = sp_playlist_track_creator(p->playlist, index);
-	if (!z_user) {
+	sp_user *user = sp_playlist_track_creator(p->playlist, index);
+	if (!user) {
 		RETURN_FALSE;
 	}
 
 	object_init_ex(return_value, spotifyuser_ce);
-	SPOTIFY_METHOD2(SpotifyUser, __construct, &tempretval, return_value, thisptr, z_user);
+	SPOTIFY_METHOD2(SpotifyUser, __construct, &tempretval, return_value, thisptr, user);
 }
 
 PHP_METHOD(SpotifyPlaylist, isCollaborative)

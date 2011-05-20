@@ -113,8 +113,6 @@ PHP_METHOD(Spotify, __destruct)
 		sp_session_process_events(obj->session, &timeout);
 	} while (!obj->is_logged_out || timeout == 0);
 
-	sp_session_release(obj->session);
-
 	efree(obj->key_data);
 }
 
@@ -193,6 +191,8 @@ PHP_METHOD(Spotify, getPlaylistByURI)
 
 	object_init_ex(return_value, spotifyplaylist_ce);
 	SPOTIFY_METHOD2(SpotifyPlaylist, __construct, &temp, return_value, object, playlist);
+
+	sp_link_release(link);
 }
 
 PHP_METHOD(Spotify, getTrackByURI)
@@ -223,6 +223,8 @@ PHP_METHOD(Spotify, getTrackByURI)
 	
 	object_init_ex(return_value, spotifytrack_ce);
 	SPOTIFY_METHOD2(SpotifyTrack, __construct, &temp, return_value, object, track);
+
+	sp_link_release(link);
 }
 
 PHP_METHOD(Spotify, getAlbumByURI)
@@ -253,6 +255,8 @@ PHP_METHOD(Spotify, getAlbumByURI)
 
 	object_init_ex(return_value, spotifyalbum_ce);
 	SPOTIFY_METHOD2(SpotifyAlbum, __construct, &temp, return_value, object, album);
+
+	sp_link_release(link);
 }
 
 static sp_playlistcontainer_callbacks playlistcontainer_callbacks = {
@@ -329,6 +333,9 @@ function_entry spotify_methods[] = {
 void spotify_free_storage(void *object TSRMLS_DC)
 {
 	spotify_object *obj = (spotify_object*)object;
+
+	sp_session_release(obj->session);
+
 	zend_hash_destroy(obj->std.properties);
 	FREE_HASHTABLE(obj->std.properties);
 	efree(obj);
