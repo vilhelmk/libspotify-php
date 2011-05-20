@@ -9,19 +9,10 @@ static void logged_in(sp_session *session, sp_error error);
 static void logged_out(sp_session *session);
 static void log_message(sp_session *session, const char *data);
 
-void (*metadata_updated_fn)(void);
-
-static void metadata_updated(sp_session *sess)
-{
-	if (metadata_updated_fn) {
-		metadata_updated_fn();
-	}
-}
-
 static sp_session_callbacks callbacks = {
 	&logged_in,
 	&logged_out,
-	&metadata_updated,
+	NULL,
 	NULL,
 	NULL,
 	NULL,

@@ -73,8 +73,6 @@ extern zend_class_entry *spotifyartist_ce;
 extern zend_class_entry *spotifyalbum_ce;
 extern zend_class_entry *spotifyuser_ce;
 
-extern void (*metadata_updated_fn)(void);
-
 extern void get_playlistcontainer_playlists(zval *return_value, container_browse_data *p, sp_playlistcontainer *pc); 
 
 #if ZEND_MODULE_API_NO >= 20090115
