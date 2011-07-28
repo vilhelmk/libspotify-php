@@ -73,7 +73,7 @@ PHP_METHOD(Spotify, __construct)
 
 	fp = fopen(key_filename, "rb");
 	if (!fp) {
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "unable to open spotify key file", 0 TSRMLS_CC);
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "Unable to open spotify key file", 0 TSRMLS_CC);
 		return;
 	}
 
@@ -83,14 +83,14 @@ PHP_METHOD(Spotify, __construct)
 
 	if (key_size > 4096) {
 		fclose(fp);
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "key file is way too large to be a key file", 0 TSRMLS_CC);
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "Key file is way too large to be a key file", 0 TSRMLS_CC);
 		return;
 	}
 
 	obj->key_data = (char*)emalloc(sizeof(char) * key_size);
 	if (fread(obj->key_data, 1, key_size, fp) != key_size) {
 		fclose(fp);
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "failed reading key file", 0 TSRMLS_CC);
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "Failed reading key file", 0 TSRMLS_CC);
 		return;
 	}
 	fclose(fp);
@@ -103,7 +103,8 @@ PHP_METHOD(Spotify, __construct)
 
 	error = sp_session_create(&config, &session);
 	if (SP_ERROR_OK != error) {
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "unable to create session", 0 TSRMLS_CC);
+		error_string = strcat("Unable to create session: ", sp_error_message(error));
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), error_string, 0 TSRMLS_CC);
 		return;
 	}
 
