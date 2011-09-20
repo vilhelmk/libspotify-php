@@ -103,8 +103,7 @@ PHP_METHOD(Spotify, __construct)
 
 	error = sp_session_create(&config, &session);
 	if (SP_ERROR_OK != error) {
-		error_string = strcat("Unable to create session: ", sp_error_message(error));
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), error_string, 0 TSRMLS_CC);
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), sp_error_message(error), 0 TSRMLS_CC);
 		return;
 	}
 
