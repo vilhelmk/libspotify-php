@@ -16,6 +16,10 @@
 
 ## Usage
 
+	// These two lines are only required if you want to use non-default paths.
+	ini_set("spotify.cache_location", "cache_location/");
+	ini_set("spotify.settings_location", "settings_location/");
+
     $spotify = new Spotify("/path/to/key.file", "username", "password");
     
 	$coolTrack = $spotify->getTrackByURI('spotify:track:6JEK0CvvjDjjMUBFoXShNZ');

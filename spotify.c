@@ -65,8 +65,8 @@ PHP_METHOD(Spotify, __construct)
 
 	memset(&config, 0, sizeof(config));
 	config.api_version = SPOTIFY_API_VERSION;
-	config.cache_location = "tmp";
-	config.settings_location = "tmp";
+	config.cache_location = INI_STR("spotify.cache_location");
+	config.settings_location = INI_STR("spotify.settings_location");
 	config.user_agent = "libspotify-php";
 
 	key_filename = Z_STRVAL_P(z_key);
@@ -382,8 +382,15 @@ zend_object_value spotify_create_handler(zend_class_entry *type TSRMLS_DC)
     return retval;
 }
 
+PHP_INI_BEGIN()
+PHP_INI_ENTRY("spotify.cache_location", "spotify_cache/", PHP_INI_ALL, NULL)
+PHP_INI_ENTRY("spotify.settings_location", "spotify_settings/", PHP_INI_ALL, NULL)
+PHP_INI_END()
+
 PHP_MINIT_FUNCTION(spotify)
 {
+	REGISTER_INI_ENTRIES();
+
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, "Spotify", spotify_methods);
 	spotify_ce = zend_register_internal_class(&ce TSRMLS_CC);
@@ -400,6 +407,13 @@ PHP_MINIT_FUNCTION(spotify)
 	return SUCCESS;
 }
 
+PHP_MSHUTDOWN_FUNCTION(spotify)
+{
+	UNREGISTER_INI_ENTRIES();
+
+	return SUCCESS;
+}
+
 zend_module_entry spotify_module_entry = {
 #if ZEND_MODULE_API_NO >= 20010901
     STANDARD_MODULE_HEADER,
@@ -407,7 +421,7 @@ zend_module_entry spotify_module_entry = {
     PHP_SPOTIFY_EXTNAME,
     NULL,        /* Functions */
     PHP_MINIT(spotify),        /* MINIT */
-    NULL,        /* MSHUTDOWN */
+    PHP_MSHUTDOWN(spotify),        /* MSHUTDOWN */
     NULL,        /* RINIT */
     NULL,        /* RSHUTDOWN */
     NULL,        /* MINFO */
