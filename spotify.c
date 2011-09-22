@@ -103,7 +103,9 @@ PHP_METHOD(Spotify, __construct)
 
 	error = sp_session_create(&config, &session);
 	if (SP_ERROR_OK != error) {
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), sp_error_message(error), 0 TSRMLS_CC);
+		char *errMsg;
+		spprintf(&errMsg, 0, "Unable to create session: %s", sp_error_message(error));
+		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), errMsg, 0 TSRMLS_CC);
 		return;
 	}
 
@@ -323,7 +325,7 @@ static void logged_in(sp_session *session, sp_error error)
 		sp_session_release(session);
 
 		char *errMsg;
-		spprintf(&errMsg, 0, "login failed: %s", sp_error_message(error));
+		spprintf(&errMsg, 0, "Login failed: %s", sp_error_message(error));
 		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), errMsg, 0 TSRMLS_CC);
 	}
 }
