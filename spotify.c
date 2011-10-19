@@ -322,7 +322,7 @@ static void logged_in(sp_session *session, sp_error error)
 
 	if (SP_ERROR_OK != error) {
 		p->is_logged_out = 1;
-		sp_session_release(session);
+		//sp_session_release(session); // temp fix for crashing
 
 		char *errMsg;
 		spprintf(&errMsg, 0, "Login failed: %s", sp_error_message(error));
