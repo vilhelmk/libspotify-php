@@ -69,13 +69,12 @@ PHP_METHOD(Spotify, __construct)
 	config.settings_location = INI_STR("spotify.settings_location");
 	config.user_agent = "libspotify-php";
 
-	// XXX access() is not portable
-	if (access(config.cache_location, W_OK|X_OK|R_OK) != 0) {
+	if (VCWD_ACCESS(config.cache_location, W_OK|X_OK|R_OK) != 0) {
 		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "spotify.cache_location is not writable or readable", 0 TSRMLS_CC);
 		return;
 	}
 
-	if (access(config.settings_location, W_OK|X_OK|R_OK) != 0) {
+	if (VCWD_ACCESS(config.settings_location, W_OK|X_OK|R_OK) != 0) {
 		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "spotify.settings_location is not writable or readable", 0 TSRMLS_CC);
 		return;
 	}
