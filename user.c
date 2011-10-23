@@ -59,6 +59,18 @@ PHP_METHOD(SpotifyUser, getName)
 	RETURN_STRING(sp_user_display_name(p->user), 1);
 }
 
+PHP_METHOD(SpotifyUser, getURI)
+{
+	char uri[256];
+	spotifyuser_object *p = (spotifyuser_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	sp_link *link = sp_link_create_from_user(p->user);
+	sp_link_as_string(link, uri, 256);
+	sp_link_release(link);
+
+	RETURN_STRING(uri, 1);
+}
+
 PHP_METHOD(SpotifyUser, getCanonicalName)
 {
 	spotifyuser_object *p = (spotifyuser_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -89,6 +101,7 @@ function_entry spotifyuser_methods[] = {
 	PHP_ME(SpotifyUser, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyUser, __destruct,			NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyUser, getName,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyUser, getURI,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyUser, getCanonicalName,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyUser, getFullName,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyUser, __toString,		NULL,	ZEND_ACC_PUBLIC)

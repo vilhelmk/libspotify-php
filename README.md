@@ -27,7 +27,7 @@
 	// List all playlists
 	$playlists = $spotify->getPlaylists(); // returns array of SpotifyPlaylist
 	foreach ($playlists as $playlist) {
-		printf("%s (%d tracks, by %s)\n", $playlist, $playlist->getNumTracks(), %playlist->getOwner());
+		printf("%s (%d tracks, by %s)\n", $playlist, $playlist->getNumTracks(), $playlist->getOwner());
 
 		foreach ($playlist->getTracks() as $track) {
 			$duration = $track->getDuration();
@@ -39,6 +39,14 @@
 		$playlist->addTrack($coolTrack, 0 /*position*/);
 	}
 
+## Troubleshooting
+
+  - Make sure that the process executing the PHP script has access to the cache- and settings-folders.
+
 ## Credits
 
 Vilhelm K. Vardøy <vilhelmkv@gmail.com>
+
+### Thanks to
+
+Jeroen Flamman

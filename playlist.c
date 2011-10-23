@@ -52,8 +52,6 @@ PHP_METHOD(SpotifyPlaylist, __construct)
 
 PHP_METHOD(SpotifyPlaylist, __destruct)
 {
-	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
-	sp_playlist_release(p->playlist);
 }
 
 PHP_METHOD(SpotifyPlaylist, getName)
@@ -62,6 +60,18 @@ PHP_METHOD(SpotifyPlaylist, getName)
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(object TSRMLS_CC);
 
 	RETURN_STRING(sp_playlist_name(p->playlist), 1);
+}
+
+PHP_METHOD(SpotifyPlaylist, getURI)
+{
+	char uri[256];
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	sp_link *link = sp_link_create_from_playlist(p->playlist);
+	sp_link_as_string(link, uri, 256);
+	sp_link_release(link);
+
+	RETURN_STRING(uri, 1);
 }
 
 PHP_METHOD(SpotifyPlaylist, getTracks)
@@ -267,6 +277,7 @@ function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyPlaylist, __destruct,			NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyPlaylist, getName,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyPlaylist, getURI,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getTracks,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getOwner,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, getDescription,		NULL,	ZEND_ACC_PUBLIC)
