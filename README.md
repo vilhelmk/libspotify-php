@@ -50,3 +50,10 @@ Vilhelm K. Vardøy <vilhelmkv@gmail.com>
 ### Thanks to
 
 Jeroen Flamman
+
+## TODO
+
+  - Instead of returning arrays of objects, change to iterators and/or arrayaccess.
+  - Remove private functions and replace them with pure C functions.
+  - Add possibility to receive tracks in inbox. Due to obvious reasons (spam) we SHOULD NOT implement a way to send tracks.
+  - Add possibility to search for tracks.
