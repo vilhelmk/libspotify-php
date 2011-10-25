@@ -369,7 +369,6 @@ void spotify_free_storage(void *object TSRMLS_DC)
 {
 	spotify_object *obj = (spotify_object*)object;
 
-	php_printf("releasing session...");
 	sp_session_release(obj->session);
 
 	zend_hash_destroy(obj->std.properties);
