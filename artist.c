@@ -74,6 +74,14 @@ PHP_METHOD(SpotifyArtist, getURI)
 	RETURN_STRING(uri, 1);
 }
 
+PHP_METHOD(SpotifyArtist, getAlbums)
+{
+	zval tempretval;
+
+	object_init_ex(return_value, spotifyalbumiterator_ce);
+	SPOTIFY_METHOD1(SpotifyAlbumIterator, __construct, &tempretval, return_value, getThis());
+}
+
 PHP_METHOD(SpotifyArtist, __toString)
 {
 	spotifyartist_object *p = (spotifyartist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -85,6 +93,7 @@ function_entry spotifyartist_methods[] = {
 	PHP_ME(SpotifyArtist, __destruct,		NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyArtist, getName,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyArtist, getURI,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyArtist, getAlbums,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyArtist, __toString,		NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };

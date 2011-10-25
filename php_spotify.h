@@ -78,6 +78,15 @@ typedef struct {
 typedef struct {
 	zend_object std;
 	sp_session *session;
+	sp_artist *artist;
+	sp_artistbrowse *artistbrowse;
+	int length;
+	int position;
+} spotifyalbumiterator_object;
+
+typedef struct {
+	zend_object std;
+	sp_session *session;
 	sp_user *user;
 } spotifyuser_object;
 
@@ -99,6 +108,8 @@ extern zend_class_entry *spotifytrack_ce;
 extern zend_class_entry *spotifyartist_ce;
 extern zend_class_entry *spotifyalbum_ce;
 extern zend_class_entry *spotifyuser_ce;
+
+extern zend_class_entry *spotifyalbumiterator_ce;
 
 extern void get_playlistcontainer_playlists(zval *return_value, container_browse_data *p, sp_playlistcontainer *pc); 
 
@@ -134,6 +145,9 @@ extern void get_playlistcontainer_playlists(zval *return_value, container_browse
 
 #define GET_THIS_PROPERTY(ce, name)			\
   zend_read_property(ce, getThis(), name, strlen(name), NOISY TSRMLS_CC);
+
+#define GET_PROPERTY(ce, thisptr, name)		\
+  zend_read_property(ce, thisptr, name, strlen(name), NOISY TSRMLS_CC);
 
 /* push parameters, call function, pop parameters */
 #define SPOTIFY_METHOD(classname, name, retval, thisptr)          \
