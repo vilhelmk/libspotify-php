@@ -301,8 +301,6 @@ static sp_playlistcontainer_callbacks playlistcontainer_callbacks = {
 
 static void playlistcontainer_complete(sp_playlistcontainer *pc, void *userdata)
 {
-	spotify_object *p = (spotify_object*)userdata;
-	p->playlistcontainer = pc;
 	sp_playlistcontainer_remove_callbacks(pc, &playlistcontainer_callbacks, userdata);
 }
 
@@ -315,10 +313,10 @@ PHP_METHOD(Spotify, initPlaylistContainer)
 		RETURN_TRUE;
 	}
 
-	sp_playlistcontainer *tempcontainer = sp_session_playlistcontainer(p->session);
-	sp_playlistcontainer_add_callbacks(tempcontainer, &playlistcontainer_callbacks, p);
+	p->playlistcontainer = sp_session_playlistcontainer(p->session);
+	sp_playlistcontainer_add_callbacks(p->playlistcontainer, &playlistcontainer_callbacks, p);
 
-	while (p->playlistcontainer == NULL) {
+	while (!sp_playlistcontainer_is_loaded(p->playlistcontainer)) {
 		sp_session_process_events(p->session, &timeout);
 	}
 
