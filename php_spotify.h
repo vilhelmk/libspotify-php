@@ -91,6 +91,16 @@ typedef struct {
 } spotifyuser_object;
 
 typedef struct {
+	zend_object std;
+	sp_session *session;
+	int type;
+	sp_albumbrowse *albumbrowse;
+	sp_playlist *playlist;
+	int length;
+	int position;
+} spotifytrackiterator_object;
+
+typedef struct {
 	sp_session *session;
 	zval *obj;
 } container_browse_data;
@@ -110,6 +120,7 @@ extern zend_class_entry *spotifyalbum_ce;
 extern zend_class_entry *spotifyuser_ce;
 
 extern zend_class_entry *spotifyalbumiterator_ce;
+extern zend_class_entry *spotifytrackiterator_ce;
 
 extern void get_playlistcontainer_playlists(zval *return_value, container_browse_data *p, sp_playlistcontainer *pc); 
 

@@ -4,5 +4,5 @@ if test "$PHP_SPOTIFY" = "yes"; then
   AC_DEFINE(HAVE_SPOTIFY, 1, [Whether you have Spotify])
   LDFLAGS="$LDFLAGS -lspotify"
   PHP_ADD_LIBRARY_WITH_PATH(spotify, "", SPOTIFY_SHARED_PATH)
-  PHP_NEW_EXTENSION(spotify, spotify.c playlist.c track.c artist.c album.c user.c albumiterator.c, $ext_shared)
+  PHP_NEW_EXTENSION(spotify, spotify.c playlist.c track.c artist.c album.c user.c albumiterator.c trackiterator.c, $ext_shared)
 fi

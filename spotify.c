@@ -418,6 +418,7 @@ PHP_MINIT_FUNCTION(spotify)
 	spotify_init_user(TSRMLS_C);
 
 	spotify_init_albumiterator(TSRMLS_C);
+	spotify_init_trackiterator(TSRMLS_C);
 
 	return SUCCESS;
 }

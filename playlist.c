@@ -80,30 +80,16 @@ PHP_METHOD(SpotifyPlaylist, getURI)
 
 PHP_METHOD(SpotifyPlaylist, getTracks)
 {
-	int i, num_tracks, timeout = 0;
-	zval *thisptr = getThis(), tempretval, *parent, *spotifyobject;
-	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
+	zval tempretval, *type, *spotifyobject;
 
-	spotifyobject = zend_read_property(spotifyplaylist_ce, thisptr, "spotify", strlen("spotify"), NOISY TSRMLS_CC);
+	ALLOC_INIT_ZVAL(type);
+	Z_TYPE_P(type) = IS_LONG;
+	Z_LVAL_P(type) = 0;
 
-	SPOTIFY_METHOD(SpotifyPlaylist, browse, &tempretval, thisptr);
+	spotifyobject = GET_THIS_PROPERTY(spotifyplaylist_ce, "spotify");
 
-	array_init(return_value);
-
-	num_tracks = sp_playlist_num_tracks(p->playlist);
-	for (i=0; i<num_tracks; i++) {
-		sp_track *track = sp_playlist_track(p->playlist, i);
-		while (!sp_track_is_loaded(track)) {
-			sp_session_process_events(p->session, &timeout);
-		}
-
-		zval *z_track;
-		ALLOC_INIT_ZVAL(z_track);
-		object_init_ex(z_track, spotifytrack_ce);
-		SPOTIFY_METHOD2(SpotifyTrack, __construct, &tempretval, z_track, spotifyobject, track);
-
-		add_next_index_zval(return_value, z_track);
-	}
+	object_init_ex(return_value, spotifytrackiterator_ce);
+	SPOTIFY_METHOD3(SpotifyTrackIterator, __construct, &tempretval, return_value, getThis(), type, spotifyobject);
 }
 
 PHP_METHOD(SpotifyPlaylist, getOwner)
@@ -126,6 +112,9 @@ PHP_METHOD(SpotifyPlaylist, getDescription)
 	RETURN_STRING(sp_playlist_get_description(p->playlist), 1);
 }
 
+/**
+ * XXX: candidate to be deprecated, better use is the track iterator's count() function.
+ */
 PHP_METHOD(SpotifyPlaylist, getNumTracks)
 {
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -266,17 +255,6 @@ PHP_METHOD(SpotifyPlaylist, removeTrack)
 	}
 }
 
-PHP_METHOD(SpotifyPlaylist, browse)
-{
-	int timeout = 0;
-
-	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
-
-	while (!sp_playlist_is_loaded(p->playlist)) {
-		sp_session_process_events(p->session, &timeout);
-	}
-}
-
 PHP_METHOD(SpotifyPlaylist, __toString)
 {
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -299,7 +277,6 @@ function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, rename,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, addTrack,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyPlaylist, removeTrack,		NULL,	ZEND_ACC_PUBLIC)
-	PHP_ME(SpotifyPlaylist, browse,				NULL,	ZEND_ACC_PRIVATE)
 	PHP_ME(SpotifyPlaylist, __toString,			NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
