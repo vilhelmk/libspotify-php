@@ -97,30 +97,33 @@ PHP_METHOD(SpotifyTrackIterator, __destruct)
 	}
 }
 
+static void get_track_by_index(spotifytrackiterator_object *p, zval *thisptr, int index, zval **return_value) {
+	zval temp, *spotifyobject;
+	sp_track *track;
+
+	switch (p->type) {
+	case TYPE_ALBUM:
+		track = sp_albumbrowse_track(p->albumbrowse, index);
+		break;
+	case TYPE_PLAYLIST:
+		track = sp_playlist_track(p->playlist, index);
+		break;
+	}
+
+	spotifyobject = GET_PROPERTY(spotifytrackiterator_ce, thisptr, "spotify");
+
+	object_init_ex(*return_value, spotifytrack_ce);
+	SPOTIFY_METHOD2(SpotifyTrack, __construct, &temp, *return_value, spotifyobject, track);
+}
+
 PHP_METHOD(SpotifyTrackIterator, current)
 {
 	spotifytrackiterator_object *p;
-	sp_track *track;
 	zval temp, *spotifyobject;
 	
 	p = (spotifytrackiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
 
-	switch (p->type) {
-	case TYPE_ALBUM:
-		track = sp_albumbrowse_track(p->albumbrowse, p->position);
-		break;
-	case TYPE_PLAYLIST:
-		track = sp_playlist_track(p->playlist, p->position);
-		break;
-	default:
-		zend_throw_exception(zend_exception_get_default(), "SpotifyTrackIterator::current() invalid type", 0 TSRMLS_CC);
-		return;
-	}
-
-	spotifyobject = GET_THIS_PROPERTY(spotifytrackiterator_ce, "spotify");
-
-	object_init_ex(return_value, spotifytrack_ce);
-	SPOTIFY_METHOD2(SpotifyTrack, __construct, &temp, return_value, spotifyobject, track);
+	get_track_by_index(p, getThis(), p->position, &return_value);
 }
 
 PHP_METHOD(SpotifyTrackIterator, key)
@@ -151,20 +154,86 @@ PHP_METHOD(SpotifyTrackIterator, valid)
 	}
 }
 
+PHP_METHOD(SpotifyTrackIterator, offsetExists)
+{
+	zval *index;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &index) == FAILURE) {
+		return;
+	}
+
+	spotifytrackiterator_object *p = (spotifytrackiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	if (Z_LVAL_P(index) >= p->length || Z_LVAL_P(index) < 0) {
+		RETURN_FALSE;
+	} else {
+		RETURN_TRUE;
+	}
+}
+
+PHP_METHOD(SpotifyTrackIterator, offsetGet)
+{
+	zval *index;
+	spotifytrackiterator_object *p;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &index) == FAILURE) {
+		return;
+	}
+	
+	p = (spotifytrackiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	get_track_by_index(p, getThis(), Z_LVAL_P(index), &return_value);
+}
+
+PHP_METHOD(SpotifyTrackIterator, offsetSet)
+{
+
+}
+
+PHP_METHOD(SpotifyTrackIterator, offsetUnset)
+{
+
+}
+
 PHP_METHOD(SpotifyTrackIterator, count)
 {
 	spotifytrackiterator_object *p = (spotifytrackiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
 	RETURN_LONG(p->length);
 }
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_offsetExists, 0, 0, 1)
+	ZEND_ARG_INFO(0, offset)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_offsetGet, 0, 0, 1)
+	ZEND_ARG_INFO(0, offset)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_offsetSet, 0, 0, 1)
+	ZEND_ARG_INFO(0, offset)
+	ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_offsetUnset, 0, 0, 1)
+	ZEND_ARG_INFO(0, offset)
+ZEND_END_ARG_INFO()
+
 function_entry spotifytrackiterator_methods[] = {
 	PHP_ME(SpotifyTrackIterator, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyTrackIterator, __destruct,		NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
+
+	// ArrayIterator
 	PHP_ME(SpotifyTrackIterator, current,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrackIterator, key,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrackIterator, next,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrackIterator, rewind,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrackIterator, valid,				NULL,	ZEND_ACC_PUBLIC)
+
+	// ArrayAccess
+	PHP_ME(SpotifyTrackIterator, offsetExists,		arginfo_offsetExists,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrackIterator, offsetGet,			arginfo_offsetGet,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrackIterator, offsetSet,			arginfo_offsetSet,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrackIterator, offsetUnset,		arginfo_offsetUnset,	ZEND_ACC_PUBLIC)
+
+	// Other functions
 	PHP_ME(SpotifyTrackIterator, count,				NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
@@ -204,6 +273,7 @@ void spotify_init_trackiterator(TSRMLS_D)
 	spotifytrackiterator_ce->create_object = spotifytrackiterator_create_handler;
 
 	zend_class_implements(spotifytrackiterator_ce TSRMLS_CC, 1, zend_ce_iterator);
+	zend_class_implements(spotifytrackiterator_ce TSRMLS_CC, 1, zend_ce_arrayaccess);
 
 	zend_declare_class_constant_long(spotifytrackiterator_ce, "TYPE_PLAYLIST", strlen("TYPE_PLAYLIST"), 0 TSRMLS_CC);
 	zend_declare_class_constant_long(spotifytrackiterator_ce, "TYPE_ALBUM", strlen("TYPE_ALBUM"), 1 TSRMLS_CC); 
