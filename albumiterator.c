@@ -113,20 +113,94 @@ PHP_METHOD(SpotifyAlbumIterator, valid)
 	}
 }
 
+PHP_METHOD(SpotifyAlbumIterator, offsetExists)
+{
+	zval *index;
+	spotifyalbumiterator_object *p;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &index) == FAILURE) {
+		return;
+	}
+
+	p = (spotifyalbumiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	if (Z_LVAL_P(index) >= p->length || Z_LVAL_P(index) < 0) {
+		RETURN_FALSE;
+	} else {
+		RETURN_TRUE;
+	}
+}
+
+PHP_METHOD(SpotifyAlbumIterator, offsetGet)
+{
+	zval *index, temp, *spotifyobject;
+	sp_album *album;
+	spotifyalbumiterator_object *p;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &index) == FAILURE) {
+		return;
+	}
+
+	p = (spotifyalbumiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	album = sp_artistbrowse_album(p->artistbrowse, L_ZVAL_P(index));
+
+	spotifyobject = GET_THIS_PROPERTY(spotifyalbumiterator_ce, "spotify");
+
+	object_init_ex(return_value, spotifyalbum_ce);
+	SPOTIFY_METHOD2(SpotifyAlbum, __construct, &temp, return_value, spotifyobject, album);
+}
+
+PHP_METHOD(SpotifyAlbumIterator, offsetSet)
+{
+
+}
+
+PHP_METHOD(SpotifyAlbumIterator, offsetUnset)
+{
+
+}
+
 PHP_METHOD(SpotifyAlbumIterator, count)
 {
 	spotifyalbumiterator_object *p = (spotifyalbumiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
 	RETURN_LONG(p->length);
 }
 
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_offsetExists, 0, 0, 1)
+    ZEND_ARG_INFO(0, offset)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_offsetGet, 0, 0, 1)
+    ZEND_ARG_INFO(0, offset)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_offsetSet, 0, 0, 1)
+    ZEND_ARG_INFO(0, offset)
+    ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_offsetUnset, 0, 0, 1)
+	ZEND_ARG_INFO(0, offset)
+ZEND_END_ARG_INFO()
+
 function_entry spotifyalbumiterator_methods[] = {
 	PHP_ME(SpotifyAlbumIterator, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyAlbumIterator, __destruct,		NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
+
+	// ArrayIterator
 	PHP_ME(SpotifyAlbumIterator, current,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbumIterator, key,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbumIterator, next,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbumIterator, rewind,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbumIterator, valid,				NULL,	ZEND_ACC_PUBLIC)
+
+	// ArrayAccess
+	PHP_ME(SpotifyAlbumIterator, offsetExists,		arginfo_offsetExists,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbumIterator, offsetGet,			arginfo_offsetGet,		ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbumIterator, offsetSet,			arginfo_offsetSet,		ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbumIterator, offsetUnset,		arginfo_offsetUnset,	ZEND_ACC_PUBLIC)
+
+	// Other functions
 	PHP_ME(SpotifyAlbumIterator, count,				NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
