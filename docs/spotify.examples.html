@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <title>PHP Manual (Partial): Examples</title>
+
+</head>
+<body>
+<table width="100%">
+    <tr valign="top">
+        <td style="font-size: smaller;" width="15%">
+<style type="text/css">
+#leftbar {
+	float: left;
+	width: 186px;
+	padding: 5px;
+	font-size: smaller;
+}
+ul.toc {
+	margin: 0px 5px 5px 5px;
+	padding: 0px;
+}
+ul.toc li {
+	font-size: 85%;
+	margin: 1px 0 1px 1px;
+	padding: 1px 0 1px 11px;
+	list-style-type: none;
+	background-repeat: no-repeat;
+	background-position: center left;
+}
+ul.toc li.header {
+	font-size: 115%;
+	padding: 5px 0px 5px 11px;
+	border-bottom: 1px solid #cccccc;
+	margin-bottom: 5px;
+}
+ul.toc li.active {
+	font-weight: bold;
+}
+ul.toc li a {
+	text-decoration: none;
+}
+ul.toc li a:hover {
+	text-decoration: underline;
+}
+</style>
+ <ul class="toc">
+  <li class="header home"><a href="index.html">PHP Manual (Partial)</a></li>
+  <li class="header up"><a href="book.spotify.html">Spotify</a></li>
+  <li><a href="intro.spotify.html">Introduction</a></li>
+  <li class="active"><a href="spotify.examples.html">Examples</a></li>
+  <li><a href="spotify.ini.html">Runtime Configuration</a></li>
+  <li><a href="spotify.core.html">Core Classes</a></li>
+ </ul>
+
+        </td>
+        <td width="85%">
+            <div style="text-align: center;">
+                <div class="prev" style="text-align: left; float: left;"><a href="intro.spotify.html">Introduction</a></div>
+                <div class="next" style="text-align: right; float: right;"><a href="spotify.ini.html">Runtime Configuration</a></div>
+                <div class="up"><a href="book.spotify.html">Spotify</a></div>
+                <div class="home"><a href="index.html">PHP Manual (Partial)</a></div>
+            </div><hr/>
+<div id="spotify.examples" class="section">
+ <h2 class="title">Examples</h2>
+ <div class="section">
+  <h2 class="title">Introduction</h2>
+  <p class="para">
+   Unofficial libspotify-php extension.
+  </p>
+  <p class="para">Here&#039;s a quick code sample that connects, inserts documents, queries for
+   documents, iterates through query results, and disconnects from MongoDB.
+   There are more details on each step in the tutorial below.
+  </p>
+  <div class="example-contents">
+<div class="phpcode"><code><span style="color: #000000">
+<span style="color: #0000BB">&lt;?php<br /><br /></span><span style="color: #FF8000">//&nbsp;These&nbsp;two&nbsp;lines&nbsp;are&nbsp;only&nbsp;required&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;non-default&nbsp;paths.<br /></span><span style="color: #0000BB">ini_set</span><span style="color: #007700">(</span><span style="color: #DD0000">"spotify.cache_location"</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">"cache_location/"</span><span style="color: #007700">);<br /></span><span style="color: #0000BB">ini_set</span><span style="color: #007700">(</span><span style="color: #DD0000">"spotify.settings_location"</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">"settings_location/"</span><span style="color: #007700">);<br /><br /></span><span style="color: #0000BB">$spotify&nbsp;</span><span style="color: #007700">=&nbsp;new&nbsp;</span><span style="color: #0000BB">Spotify</span><span style="color: #007700">(</span><span style="color: #DD0000">"/path/to/key.file"</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">"username"</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">"password"</span><span style="color: #007700">);<br /><br /></span><span style="color: #0000BB">$coolTrack&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">$spotify</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">getTrackByURI</span><span style="color: #007700">(</span><span style="color: #DD0000">'spotify:track:6JEK0CvvjDjjMUBFoXShNZ'</span><span style="color: #007700">);<br /><br /></span><span style="color: #FF8000">//&nbsp;List&nbsp;all&nbsp;playlists<br /></span><span style="color: #0000BB">$playlists&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">$spotify</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">getPlaylists</span><span style="color: #007700">();&nbsp;</span><span style="color: #FF8000">//&nbsp;returns&nbsp;array&nbsp;of&nbsp;SpotifyPlaylist<br /></span><span style="color: #007700">foreach&nbsp;(</span><span style="color: #0000BB">$playlists&nbsp;</span><span style="color: #007700">as&nbsp;</span><span style="color: #0000BB">$playlist</span><span style="color: #007700">)&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">printf</span><span style="color: #007700">(</span><span style="color: #DD0000">"%s&nbsp;(%d&nbsp;tracks,&nbsp;by&nbsp;%s)\n"</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$playlist</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$playlist</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">getNumTracks</span><span style="color: #007700">(),&nbsp;</span><span style="color: #0000BB">$playlist</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">getOwner</span><span style="color: #007700">());<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;foreach&nbsp;(</span><span style="color: #0000BB">$playlist</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">getTracks</span><span style="color: #007700">()&nbsp;as&nbsp;</span><span style="color: #0000BB">$track</span><span style="color: #007700">)&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$duration&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">$track</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">getDuration</span><span style="color: #007700">();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">printf</span><span style="color: #007700">(</span><span style="color: #DD0000">"&nbsp;&nbsp;-&gt;&nbsp;%s&nbsp;-&nbsp;%s&nbsp;[%02d:%02d]\n"</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$track</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">getArtist</span><span style="color: #007700">(),&nbsp;</span><span style="color: #0000BB">$track</span><span style="color: #007700">,<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$duration</span><span style="color: #007700">/</span><span style="color: #0000BB">60</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$duration</span><span style="color: #007700">%</span><span style="color: #0000BB">60</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #FF8000">//&nbsp;and&nbsp;add&nbsp;a&nbsp;important&nbsp;piece&nbsp;of&nbsp;music<br />&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$playlist</span><span style="color: #007700">-&gt;</span><span style="color: #0000BB">addTrack</span><span style="color: #007700">(</span><span style="color: #0000BB">$coolTrack</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">0&nbsp;</span><span style="color: #FF8000">/*position*/</span><span style="color: #007700">);<br />}<br /><br /></span><span style="color: #0000BB">?&gt;</span>
+</span>
+</code></div>
+  </div>
+
+ </div>
+</div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
