@@ -100,6 +100,7 @@ PHP_METHOD(SpotifyTrackIterator, __destruct)
 static void get_track_by_index(spotifytrackiterator_object *p, zval *thisptr, int index, zval **return_value) {
 	zval temp, *spotifyobject;
 	sp_track *track;
+	int timeout;
 
 	switch (p->type) {
 	case TYPE_ALBUM:
@@ -108,6 +109,10 @@ static void get_track_by_index(spotifytrackiterator_object *p, zval *thisptr, in
 	case TYPE_PLAYLIST:
 		track = sp_playlist_track(p->playlist, index);
 		break;
+	}
+
+	while (!sp_track_is_loaded(track)) {
+		sp_session_process_events(p->session, &timeout);
 	}
 
 	spotifyobject = GET_PROPERTY(spotifytrackiterator_ce, thisptr, "spotify");
