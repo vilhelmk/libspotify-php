@@ -26,7 +26,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef PHP_SPOTIFY_H
 #define PHP_SPOTIFY_H 1
 
-#define PHP_SPOTIFY_VERSION "0.1"
+#define PHP_SPOTIFY_VERSION "0.2"
 #define PHP_SPOTIFY_EXTNAME "spotify"
 
 #include <stdlib.h>
