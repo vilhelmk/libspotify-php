@@ -33,7 +33,7 @@ PHP_METHOD(SpotifyUser, __construct)
 	zval *parent;
 	sp_user *user;
 	
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Oz", &parent, spotifyplaylist_ce, &user) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Oz", &parent, spotify_ce, &user) == FAILURE) {
 		return;
 	}
 
@@ -41,6 +41,8 @@ PHP_METHOD(SpotifyUser, __construct)
 	spotifyuser_object *obj = (spotifyuser_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
 	obj->user = user;
+
+	zend_update_property(spotifyuser_ce, getThis(), "spotify", strlen("spotify"), parent TSRMLS_CC);
 
 	sp_user_add_ref(obj->user);
 }
@@ -74,7 +76,7 @@ PHP_METHOD(SpotifyUser, getURI)
 PHP_METHOD(SpotifyUser, getCanonicalName)
 {
 	spotifyuser_object *p = (spotifyuser_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
-	char *name = sp_user_canonical_name(p->user);
+	const char *name = sp_user_canonical_name(p->user);
 	if (!name) {
 		RETURN_FALSE;
 	}
@@ -84,7 +86,7 @@ PHP_METHOD(SpotifyUser, getCanonicalName)
 PHP_METHOD(SpotifyUser, getFullName)
 {
 	spotifyuser_object *p = (spotifyuser_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
-	char *name = sp_user_full_name(p->user);
+	const char *name = sp_user_full_name(p->user);
 	if (!name) {
 		RETURN_FALSE;
 	}
@@ -123,7 +125,6 @@ zend_object_value spotifyuser_create_handler(zend_class_entry *type TSRMLS_DC)
 
 	spotifyuser_object *obj = (spotifyuser_object *)emalloc(sizeof(spotifyuser_object));
 	memset(obj, 0, sizeof(spotifyuser_object));
-   // obj->std.ce = type;
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
     zend_hash_copy(obj->std.properties, &type->default_properties,
@@ -142,6 +143,6 @@ void spotify_init_user(TSRMLS_D)
 	INIT_CLASS_ENTRY(ce, "SpotifyUser", spotifyuser_methods);
 	spotifyuser_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	spotifyuser_ce->create_object = spotifyuser_create_handler;
-	//memcpy(&spotify_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-	//spotify_object_handlers.clone_obj = NULL;
+
+	zend_declare_property_null(spotifyuser_ce, "spotify", strlen("spotify"), ZEND_ACC_PROTECTED TSRMLS_CC);
 }

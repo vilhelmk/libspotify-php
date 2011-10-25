@@ -70,12 +70,12 @@ PHP_METHOD(Spotify, __construct)
 	config.user_agent = "libspotify-php";
 
 	if (VCWD_ACCESS(config.cache_location, W_OK|X_OK|R_OK) != 0) {
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "spotify.cache_location is not writable or readable", 0 TSRMLS_CC);
+		zend_throw_exception(zend_exception_get_default(), "spotify.cache_location is not writable or readable", 0 TSRMLS_CC);
 		return;
 	}
 
 	if (VCWD_ACCESS(config.settings_location, W_OK|X_OK|R_OK) != 0) {
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "spotify.settings_location is not writable or readable", 0 TSRMLS_CC);
+		zend_throw_exception(zend_exception_get_default(), "spotify.settings_location is not writable or readable", 0 TSRMLS_CC);
 		return;
 	}
 
@@ -83,7 +83,7 @@ PHP_METHOD(Spotify, __construct)
 
 	fp = fopen(key_filename, "rb");
 	if (!fp) {
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "Unable to open spotify key file", 0 TSRMLS_CC);
+		zend_throw_exception(zend_exception_get_default(), "Unable to open spotify key file", 0 TSRMLS_CC);
 		return;
 	}
 
@@ -93,14 +93,14 @@ PHP_METHOD(Spotify, __construct)
 
 	if (key_size > 4096) {
 		fclose(fp);
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "Key file is way too large to be a key file", 0 TSRMLS_CC);
+		zend_throw_exception(zend_exception_get_default(), "Key file is way too large to be a key file", 0 TSRMLS_CC);
 		return;
 	}
 
 	obj->key_data = (char*)emalloc(sizeof(char) * key_size);
 	if (fread(obj->key_data, 1, key_size, fp) != key_size) {
 		fclose(fp);
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), "Failed reading key file", 0 TSRMLS_CC);
+		zend_throw_exception(zend_exception_get_default(), "Failed reading key file", 0 TSRMLS_CC);
 		return;
 	}
 	fclose(fp);
@@ -115,7 +115,7 @@ PHP_METHOD(Spotify, __construct)
 	if (SP_ERROR_OK != error) {
 		char *errMsg;
 		spprintf(&errMsg, 0, "Unable to create session: %s", sp_error_message(error));
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), errMsg, 0 TSRMLS_CC);
+		zend_throw_exception(zend_exception_get_default(), errMsg, 0 TSRMLS_CC);
 		return;
 	}
 
@@ -136,7 +136,7 @@ PHP_METHOD(Spotify, __destruct)
 	int timeout = 0;
 
 	if (obj->playlistcontainer != NULL) {
-		//sp_playlistcontainer_release(obj->playlistcontainer);
+		sp_playlistcontainer_release(obj->playlistcontainer);
 	}
 
     do {
@@ -322,6 +322,8 @@ PHP_METHOD(Spotify, initPlaylistContainer)
 		sp_session_process_events(p->session, &timeout);
 	}
 
+	sp_playlistcontainer_add_ref(p->playlistcontainer);
+
 	RETURN_TRUE;
 }
 
@@ -332,11 +334,11 @@ static void logged_in(sp_session *session, sp_error error)
 
 	if (SP_ERROR_OK != error) {
 		p->is_logged_out = 1;
-		//sp_session_release(session); // temp fix for crashing
+		sp_session_release(session);
 
 		char *errMsg;
 		spprintf(&errMsg, 0, "Login failed: %s", sp_error_message(error));
-		zend_throw_exception((zend_class_entry*)zend_exception_get_default(), errMsg, 0 TSRMLS_CC);
+		zend_throw_exception(zend_exception_get_default(), errMsg, 0 TSRMLS_CC);
 	}
 }
 
@@ -367,6 +369,7 @@ void spotify_free_storage(void *object TSRMLS_DC)
 {
 	spotify_object *obj = (spotify_object*)object;
 
+	php_printf("releasing session...");
 	sp_session_release(obj->session);
 
 	zend_hash_destroy(obj->std.properties);
@@ -381,7 +384,6 @@ zend_object_value spotify_create_handler(zend_class_entry *type TSRMLS_DC)
 
 	spotify_object *obj = (spotify_object *)emalloc(sizeof(spotify_object));
 	memset(obj, 0, sizeof(spotify_object));
-   // obj->std.ce = type;
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
     zend_hash_copy(obj->std.properties, &type->default_properties,

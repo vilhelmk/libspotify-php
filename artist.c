@@ -33,7 +33,7 @@ PHP_METHOD(SpotifyArtist, __construct)
 	zval *parent;
 	sp_artist *artist;
 	
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &parent, &artist) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Oz", &parent, spotify_ce, &artist) == FAILURE) {
 		return;
 	}
 
@@ -41,6 +41,8 @@ PHP_METHOD(SpotifyArtist, __construct)
 	spotifyartist_object *obj = (spotifyartist_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
 	obj->artist = artist;
+
+	zend_update_property(spotifyartist_ce, getThis(), "spotify", strlen("spotify"), parent TSRMLS_CC);
 
 	sp_artist_add_ref(obj->artist);
 }
@@ -62,7 +64,8 @@ PHP_METHOD(SpotifyArtist, getName)
 PHP_METHOD(SpotifyArtist, getURI)
 {
 	char uri[256];
-	spotifyartist_object *p = (spotifyartist_object*)zend_object_get_object(getThis() TSRMLS_CC);
+	zval *object = getThis();
+	spotifyartist_object *p = (spotifyartist_object*)zend_object_store_get_object(object TSRMLS_CC);
 
 	sp_link *link = sp_link_create_from_artist(p->artist);
 	sp_link_as_string(link, uri, 256);
@@ -101,7 +104,6 @@ zend_object_value spotifyartist_create_handler(zend_class_entry *type TSRMLS_DC)
 
 	spotifyartist_object *obj = (spotifyartist_object *)emalloc(sizeof(spotifyartist_object));
 	memset(obj, 0, sizeof(spotifyartist_object));
-   // obj->std.ce = type;
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
     zend_hash_copy(obj->std.properties, &type->default_properties,
@@ -120,6 +122,6 @@ void spotify_init_artist(TSRMLS_D)
 	INIT_CLASS_ENTRY(ce, "SpotifyArtist", spotifyartist_methods);
 	spotifyartist_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	spotifyartist_ce->create_object = spotifyartist_create_handler;
-	//memcpy(&spotify_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-	//spotify_object_handlers.clone_obj = NULL;
+
+	zend_declare_property_null(spotifyartist_ce, "spotify", strlen("spotify"), ZEND_ACC_PROTECTED TSRMLS_CC);
 }

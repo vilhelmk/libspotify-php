@@ -43,6 +43,8 @@ PHP_METHOD(SpotifyPlaylist, __construct)
 	obj->session = p->session;
 	obj->playlist = playlist;
 
+	zend_update_property(spotifyplaylist_ce, getThis(), "spotify", strlen("spotify"), parent TSRMLS_CC);
+
 	while (!sp_playlist_is_loaded(playlist)) {
 		sp_session_process_events(p->session, &timeout);
 	}
@@ -52,6 +54,8 @@ PHP_METHOD(SpotifyPlaylist, __construct)
 
 PHP_METHOD(SpotifyPlaylist, __destruct)
 {
+	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	sp_playlist_release(p->playlist);
 }
 
 PHP_METHOD(SpotifyPlaylist, getName)
@@ -77,8 +81,10 @@ PHP_METHOD(SpotifyPlaylist, getURI)
 PHP_METHOD(SpotifyPlaylist, getTracks)
 {
 	int i, num_tracks, timeout = 0;
-	zval *thisptr = getThis(), tempretval;
+	zval *thisptr = getThis(), tempretval, *parent, *spotifyobject;
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
+
+	spotifyobject = zend_read_property(spotifyplaylist_ce, thisptr, "spotify", strlen("spotify"), NOISY TSRMLS_CC);
 
 	SPOTIFY_METHOD(SpotifyPlaylist, browse, &tempretval, thisptr);
 
@@ -94,7 +100,7 @@ PHP_METHOD(SpotifyPlaylist, getTracks)
 		zval *z_track;
 		ALLOC_INIT_ZVAL(z_track);
 		object_init_ex(z_track, spotifytrack_ce);
-		SPOTIFY_METHOD2(SpotifyTrack, __construct, &tempretval, z_track, thisptr, track);
+		SPOTIFY_METHOD2(SpotifyTrack, __construct, &tempretval, z_track, spotifyobject, track);
 
 		add_next_index_zval(return_value, z_track);
 	}
@@ -103,13 +109,15 @@ PHP_METHOD(SpotifyPlaylist, getTracks)
 PHP_METHOD(SpotifyPlaylist, getOwner)
 {
 	sp_user *user;
-	zval temp;
+	zval temp, *spotifyobject;
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	spotifyobject = zend_read_property(spotifyplaylist_ce, getThis(), "spotify", strlen("spotify"), NOISY TSRMLS_CC);
 
 	user = sp_playlist_owner(p->playlist);
 
 	object_init_ex(return_value, spotifyuser_ce);
-	SPOTIFY_METHOD2(SpotifyUser, __construct, &temp, return_value, getThis(), user);
+	SPOTIFY_METHOD2(SpotifyUser, __construct, &temp, return_value, spotifyobject, user);
 }
 
 PHP_METHOD(SpotifyPlaylist, getDescription)
@@ -140,11 +148,13 @@ PHP_METHOD(SpotifyPlaylist, getTrackCreateTime)
 PHP_METHOD(SpotifyPlaylist, getTrackCreator)
 {
 	int index;
-	zval *thisptr = getThis(), tempretval;
+	zval *thisptr = getThis(), tempretval, *spotifyobject;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &index) == FAILURE) {
 		return;
 	}
+
+	spotifyobject = zend_read_property(spotifyplaylist_ce, thisptr, "spotify", strlen("spotify"), NOISY TSRMLS_CC);
 
 	spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
 	sp_user *user = sp_playlist_track_creator(p->playlist, index);
@@ -153,7 +163,7 @@ PHP_METHOD(SpotifyPlaylist, getTrackCreator)
 	}
 
 	object_init_ex(return_value, spotifyuser_ce);
-	SPOTIFY_METHOD2(SpotifyUser, __construct, &tempretval, return_value, thisptr, user);
+	SPOTIFY_METHOD2(SpotifyUser, __construct, &tempretval, return_value, spotifyobject, user);
 }
 
 PHP_METHOD(SpotifyPlaylist, isCollaborative)
@@ -309,7 +319,6 @@ zend_object_value spotifyplaylist_create_handler(zend_class_entry *type TSRMLS_D
 
 	spotifyplaylist_object *obj = (spotifyplaylist_object *)emalloc(sizeof(spotifyplaylist_object));
 	memset(obj, 0, sizeof(spotifyplaylist_object));
-   // obj->std.ce = type;
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
     zend_hash_copy(obj->std.properties, &type->default_properties,
@@ -328,6 +337,6 @@ void spotify_init_playlist(TSRMLS_D)
 	INIT_CLASS_ENTRY(ce, "SpotifyPlaylist", spotifyplaylist_methods);
 	spotifyplaylist_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	spotifyplaylist_ce->create_object = spotifyplaylist_create_handler;
-	//memcpy(&spotify_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-	//spotify_object_handlers.clone_obj = NULL;
+
+	zend_declare_property_null(spotifyplaylist_ce, "spotify", strlen("spotify"), ZEND_ACC_PROTECTED TSRMLS_CC);
 }

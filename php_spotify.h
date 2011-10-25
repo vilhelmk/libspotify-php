@@ -102,6 +102,9 @@ extern zend_class_entry *spotifyuser_ce;
 
 extern void get_playlistcontainer_playlists(zval *return_value, container_browse_data *p, sp_playlistcontainer *pc); 
 
+#define NOISY 0
+#define QUIET 1
+
 #if ZEND_MODULE_API_NO >= 20090115
 # define PUSH_PARAM(arg) zend_vm_stack_push(arg TSRMLS_CC)
 # define POP_PARAM() (void)zend_vm_stack_pop(TSRMLS_C)
@@ -128,6 +131,9 @@ extern void get_playlistcontainer_playlists(zval *return_value, container_browse
   SPOTIFY_METHOD_BASE(classname, name)(num, retval, NULL, thisptr, 0 TSRMLS_CC); \
   POP_EO_PARAM();           \
   POP_PARAM(); POP_PARAM();
+
+#define GET_THIS_PROPERTY(ce, name)			\
+  zend_read_property(ce, getThis(), name, strlen(name), NOISY TSRMLS_CC);
 
 /* push parameters, call function, pop parameters */
 #define SPOTIFY_METHOD(classname, name, retval, thisptr)          \

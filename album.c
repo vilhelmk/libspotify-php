@@ -35,7 +35,7 @@ PHP_METHOD(SpotifyAlbum, __construct)
 	zval *parent;
 	sp_album *album;
 	
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &parent, &album) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "Oz", &parent, spotify_ce, &album) == FAILURE) {
 		return;
 	}
 
@@ -44,6 +44,8 @@ PHP_METHOD(SpotifyAlbum, __construct)
 	obj->session = p->session;
 	obj->album = album;
 	obj->albumbrowse = NULL;
+
+	zend_update_property(spotifyalbum_ce, getThis(), "spotify", strlen("spotify"), parent TSRMLS_CC);
 
 	sp_album_add_ref(obj->album);
 }
@@ -88,13 +90,15 @@ PHP_METHOD(SpotifyAlbum, getYear)
 PHP_METHOD(SpotifyAlbum, getArtist)
 {
 	sp_artist *artist;
-	zval temp;
+	zval temp, *spotifyobject;
 	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	spotifyobject = GET_THIS_PROPERTY(spotifyalbum_ce, "spotify");
 
 	artist = sp_album_artist(p->album);
 
 	object_init_ex(return_value, spotifyartist_ce);
-	SPOTIFY_METHOD2(SpotifyArtist, __construct, &temp, return_value, getThis(), artist);
+	SPOTIFY_METHOD2(SpotifyArtist, __construct, &temp, return_value, spotifyobject, artist);
 }
 
 PHP_METHOD(SpotifyAlbum, getNumTracks)
@@ -108,11 +112,13 @@ PHP_METHOD(SpotifyAlbum, getNumTracks)
 PHP_METHOD(SpotifyAlbum, getTracks)
 {
 	int num_tracks, i;
-	zval tempretval, *thisptr = getThis();
+	zval tempretval, *thisptr = getThis(), *spotifyobject;
 
 	spotifyalbum_object *p = (spotifyalbum_object*)zend_object_store_get_object(thisptr TSRMLS_CC);
 
 	SPOTIFY_METHOD(SpotifyAlbum, browse, &tempretval, thisptr);
+
+	spotifyobject = GET_THIS_PROPERTY(spotifyalbum_ce, "spotify");
 
 	array_init(return_value);
 
@@ -124,7 +130,7 @@ PHP_METHOD(SpotifyAlbum, getTracks)
 		zval *z_track;
 		ALLOC_INIT_ZVAL(z_track);
 		object_init_ex(z_track, spotifytrack_ce);
-		SPOTIFY_METHOD2(SpotifyTrack, __construct, &tempretval, z_track, thisptr, track);
+		SPOTIFY_METHOD2(SpotifyTrack, __construct, &tempretval, z_track, spotifyobject, track);
 		add_next_index_zval(return_value, z_track);
 	}
 }
@@ -194,7 +200,6 @@ zend_object_value spotifyalbum_create_handler(zend_class_entry *type TSRMLS_DC)
 
 	spotifyalbum_object *obj = (spotifyalbum_object *)emalloc(sizeof(spotifyalbum_object));
 	memset(obj, 0, sizeof(spotifyalbum_object));
-   // obj->std.ce = type;
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
     zend_hash_copy(obj->std.properties, &type->default_properties,
@@ -213,11 +218,11 @@ void spotify_init_album(TSRMLS_D)
 	INIT_CLASS_ENTRY(ce, "SpotifyAlbum", spotifyalbum_methods);
 	spotifyalbum_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	spotifyalbum_ce->create_object = spotifyalbum_create_handler;
-	//memcpy(&spotify_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-	//spotify_object_handlers.clone_obj = NULL;
 
 	zend_declare_class_constant_long(spotifyalbum_ce, "TYPE_ALBUM", strlen("TYPE_ALBUM"), 0 TSRMLS_CC);
 	zend_declare_class_constant_long(spotifyalbum_ce, "TYPE_SINGLE", strlen("TYPE_SINGLE"), 1 TSRMLS_CC);
 	zend_declare_class_constant_long(spotifyalbum_ce, "TYPE_COMPILATION", strlen("TYPE_COMPILATION"), 2 TSRMLS_CC);
 	zend_declare_class_constant_long(spotifyalbum_ce, "TYPE_UNKNOWN", strlen("TYPE_UNKNOWN"), 3 TSRMLS_CC);
+
+	zend_declare_property_null(spotifyalbum_ce, "spotify", strlen("spotify"), ZEND_ACC_PROTECTED TSRMLS_CC);
 }
