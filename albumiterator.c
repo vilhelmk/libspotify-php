@@ -113,6 +113,12 @@ PHP_METHOD(SpotifyAlbumIterator, valid)
 	}
 }
 
+PHP_METHOD(SpotifyAlbumIterator, count)
+{
+	spotifyalbumiterator_object *p = (spotifyalbumiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+	RETURN_LONG(p->length);
+}
+
 function_entry spotifyalbumiterator_methods[] = {
 	PHP_ME(SpotifyAlbumIterator, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyAlbumIterator, __destruct,		NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
@@ -121,6 +127,7 @@ function_entry spotifyalbumiterator_methods[] = {
 	PHP_ME(SpotifyAlbumIterator, next,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbumIterator, rewind,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyAlbumIterator, valid,				NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyAlbumIterator, count,				NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };
 
