@@ -75,9 +75,14 @@ PHP_METHOD(SpotifyAlbumIterator, current)
 	spotifyalbumiterator_object *p;
 	sp_album *album;
 	zval temp, *spotifyobject;
+	int timeout;
 	
 	p = (spotifyalbumiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
 	album = sp_artistbrowse_album(p->artistbrowse, p->position);
+
+	while (!sp_album_is_loaded(album)) {
+		sp_session_process_events(p->session, &timeout);
+	}
 
 	spotifyobject = GET_THIS_PROPERTY(spotifyalbumiterator_ce, "spotify");
 
