@@ -83,16 +83,6 @@ PHP_METHOD(SpotifyUser, getCanonicalName)
 	RETURN_STRING(name, 1);
 }
 
-PHP_METHOD(SpotifyUser, getFullName)
-{
-	spotifyuser_object *p = (spotifyuser_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
-	const char *name = sp_user_full_name(p->user);
-	if (!name) {
-		RETURN_FALSE;
-	}
-	RETURN_STRING(name, 1);
-}
-
 PHP_METHOD(SpotifyUser, __toString)
 {
 	spotifyuser_object *p = (spotifyuser_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -105,7 +95,6 @@ function_entry spotifyuser_methods[] = {
 	PHP_ME(SpotifyUser, getName,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyUser, getURI,				NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyUser, getCanonicalName,	NULL,	ZEND_ACC_PUBLIC)
-	PHP_ME(SpotifyUser, getFullName,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyUser, __toString,		NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };

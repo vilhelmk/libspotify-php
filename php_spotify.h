@@ -66,6 +66,7 @@ typedef struct {
 	zend_object std;
 	sp_session *session;
 	sp_artist *artist;
+        sp_artistbrowse *artistbrowse;
 } spotifyartist_object;
 
 typedef struct {
@@ -89,6 +90,12 @@ typedef struct {
 	sp_session *session;
 	sp_user *user;
 } spotifyuser_object;
+
+typedef struct {
+        zend_object std;
+        sp_session *session;
+        sp_toplistbrowse *toplistbrowse;
+} spotifytoplist_object;
 
 typedef struct {
 	zend_object std;
@@ -118,6 +125,7 @@ extern zend_class_entry *spotifytrack_ce;
 extern zend_class_entry *spotifyartist_ce;
 extern zend_class_entry *spotifyalbum_ce;
 extern zend_class_entry *spotifyuser_ce;
+extern zend_class_entry *spotifytoplist_ce;
 
 extern zend_class_entry *spotifyalbumiterator_ce;
 extern zend_class_entry *spotifytrackiterator_ce;

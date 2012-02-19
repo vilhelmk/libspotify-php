@@ -145,6 +145,19 @@ PHP_METHOD(SpotifyTrack, isStarred)
 	}
 }
 
+PHP_METHOD(SpotifyTrack, isAvailable)
+{
+	spotifytrack_object *p = (spotifytrack_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+	sp_track_availability availability = sp_track_get_availability(p->session, p->track);
+
+	if (availability == SP_TRACK_AVAILABILITY_AVAILABLE) {
+		RETURN_TRUE;
+	} else {
+		RETURN_FALSE;
+	}
+}
+
 PHP_METHOD(SpotifyTrack, setStarred)
 {
 	bool starred;
@@ -174,6 +187,7 @@ function_entry spotifytrack_methods[] = {
 	PHP_ME(SpotifyTrack, getDuration,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getPopularity,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, getIndex,		NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyTrack, isAvailable,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, isStarred,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, setStarred,	NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyTrack, __toString,	NULL,	ZEND_ACC_PUBLIC)

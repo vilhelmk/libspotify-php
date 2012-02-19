@@ -45,6 +45,8 @@ static sp_session_callbacks callbacks = {
 	&log_message
 };
 
+PHP_METHOD(Spotify, initPlaylistContainer);
+
 PHP_METHOD(Spotify, __construct)
 {
 	zval *object = getThis();
@@ -193,6 +195,23 @@ PHP_METHOD(Spotify, getStarredPlaylist)
 	SPOTIFY_METHOD2(SpotifyPlaylist, __construct, &temp, return_value, object, playlist);
 }
 
+PHP_METHOD(Spotify, getInboxPlaylist)
+{
+        zval *object = getThis();
+        zval temp;
+
+        spotify_object *obj = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+        do {
+                sp_session_process_events(obj->session, &obj->timeout);
+        } while (obj->timeout == 0);
+
+        sp_playlist *playlist = sp_session_inbox_create(obj->session);
+
+        object_init_ex(return_value, spotifyplaylist_ce);
+        SPOTIFY_METHOD2(SpotifyPlaylist, __construct, &temp, return_value, object, playlist);
+}
+
 PHP_METHOD(Spotify, getPlaylistByURI)
 {
 	zval *uri, temp, *object = getThis();
@@ -282,14 +301,70 @@ PHP_METHOD(Spotify, getAlbumByURI)
 
 	sp_album *album = sp_link_as_album(link);
 
-	while (!sp_album_is_loaded(album)) {
-		sp_session_process_events(p->session, &timeout);
-	}
-
 	object_init_ex(return_value, spotifyalbum_ce);
 	SPOTIFY_METHOD2(SpotifyAlbum, __construct, &temp, return_value, object, album);
 
 	sp_link_release(link);
+}
+
+PHP_METHOD(Spotify, getArtistByURI)
+{
+        zval *uri, temp, *object = getThis();
+        int timeout = 0;
+
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &uri) == FAILURE) {
+                return;
+        }
+
+        spotify_object *p = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+        sp_link *link = sp_link_create_from_string(Z_STRVAL_P(uri));
+        if (NULL == link) {
+                RETURN_FALSE;
+        }
+
+        if (SP_LINKTYPE_ARTIST != sp_link_type(link)) {
+                RETURN_FALSE;
+        }
+
+        sp_artist *artist = sp_link_as_artist(link);
+
+        object_init_ex(return_value, spotifyartist_ce);
+        SPOTIFY_METHOD2(SpotifyArtist, __construct, &temp, return_value, object, artist);
+
+        sp_link_release(link);
+}
+
+PHP_METHOD(Spotify, getToplist)
+{
+        zval temp, *object = getThis();
+
+        spotify_object *p = (spotify_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+        object_init_ex(return_value, spotifytoplist_ce);
+
+        SPOTIFY_METHOD1(SpotifyToplist, __construct, &temp, return_value, object);
+}
+
+PHP_METHOD(Spotify, getUser)
+{
+        sp_user *user;
+        zval temp;
+        spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+        user = sp_session_user(p->session);
+
+        object_init_ex(return_value, spotifyuser_ce);
+        SPOTIFY_METHOD2(SpotifyUser, __construct, &temp, return_value, getThis(), user);
+}
+
+PHP_METHOD(Spotify, getUserCountry)
+{
+        spotifyplaylist_object *p = (spotifyplaylist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+        int user_country = sp_session_user_country(p->session);
+
+        RETURN_LONG(user_country);
 }
 
 static sp_playlistcontainer_callbacks playlistcontainer_callbacks = {
@@ -324,7 +399,6 @@ PHP_METHOD(Spotify, initPlaylistContainer)
 
 	RETURN_TRUE;
 }
-
 static void logged_in(sp_session *session, sp_error error)
 {
 	spotify_object *p = sp_session_userdata(session);
@@ -356,9 +430,14 @@ function_entry spotify_methods[] = {
 	PHP_ME(Spotify, __destruct,				NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(Spotify, getPlaylists,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(Spotify, getStarredPlaylist,     NULL,   ZEND_ACC_PUBLIC)
+	PHP_ME(Spotify, getInboxPlaylist,     NULL,   ZEND_ACC_PUBLIC)
 	PHP_ME(Spotify, getPlaylistByURI,		NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(Spotify, getTrackByURI,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(Spotify, getAlbumByURI,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(Spotify, getArtistByURI,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(Spotify, getToplist,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(Spotify, getUser,			NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(Spotify, getUserCountry,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(Spotify, initPlaylistContainer,	NULL,	ZEND_ACC_PRIVATE)
 	{NULL, NULL, NULL}
 };
@@ -414,6 +493,7 @@ PHP_MINIT_FUNCTION(spotify)
 	spotify_init_artist(TSRMLS_C);
 	spotify_init_album(TSRMLS_C);
 	spotify_init_user(TSRMLS_C);
+	spotify_init_toplist(TSRMLS_C);
 
 	spotify_init_albumiterator(TSRMLS_C);
 	spotify_init_trackiterator(TSRMLS_C);

@@ -45,7 +45,8 @@
 
 ## Credits
 
-Vilhelm K. Vardøy <vilhelmkv@gmail.com>
+ - Vilhelm K. Vardøy <vilhelmkv@gmail.com>
+ - Liam McLoughlin <hexxeh@hexxeh.net>
 
 ### Thanks to
 

@@ -27,6 +27,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 zend_class_entry *spotifyartist_ce;
 
+PHP_METHOD(SpotifyArtist, browse);
+
 PHP_METHOD(SpotifyArtist, __construct)
 {
 	zval *object = getThis();
@@ -41,6 +43,7 @@ PHP_METHOD(SpotifyArtist, __construct)
 	spotifyartist_object *obj = (spotifyartist_object*)zend_object_store_get_object(object TSRMLS_CC);
 	obj->session = p->session;
 	obj->artist = artist;
+	obj->artistbrowse = NULL;
 
 	zend_update_property(spotifyartist_ce, getThis(), "spotify", strlen("spotify"), parent TSRMLS_CC);
 
@@ -50,6 +53,11 @@ PHP_METHOD(SpotifyArtist, __construct)
 PHP_METHOD(SpotifyArtist, __destruct)
 {
 	spotifyartist_object *p = (spotifyartist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+
+        if (p->artistbrowse != NULL) {
+                sp_artistbrowse_release(p->artistbrowse);
+        }
+
 	sp_artist_release(p->artist);
 }
 
@@ -82,6 +90,81 @@ PHP_METHOD(SpotifyArtist, getAlbums)
 	SPOTIFY_METHOD1(SpotifyAlbumIterator, __construct, &tempretval, return_value, getThis());
 }
 
+PHP_METHOD(SpotifyArtist, getPortrait)
+{
+        int timeout = 0;
+
+        zval *index, *object = getThis();
+        spotifyartist_object *p = (spotifyartist_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+        if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &index) == FAILURE) {
+                return;
+        }
+
+        zval tempretval, *thisptr = getThis();
+        SPOTIFY_METHOD(SpotifyArtist, browse, &tempretval, thisptr);
+
+        int numportraits = sp_artistbrowse_num_portraits(p->artistbrowse);
+
+        if(Z_LVAL_P(index) > numportraits)
+        {
+                RETURN_FALSE;
+        }
+
+        const byte* image_id = sp_artistbrowse_portrait(p->artistbrowse, Z_LVAL_P(index));
+        sp_image *image = sp_image_create(p->session, image_id);
+
+        while(!sp_image_is_loaded(image))
+        {
+                sp_session_process_events(p->session, &timeout);
+        }
+
+        size_t size;
+        const byte* image_data = sp_image_data(image, &size);
+
+        RETURN_STRINGL(image_data, size, 1);
+
+        sp_image_release(image);
+}
+
+PHP_METHOD(SpotifyArtist, getNumPortraits)
+{
+        int timeout = 0;
+
+        zval *object = getThis();
+        spotifyartist_object *p = (spotifyartist_object*)zend_object_store_get_object(object TSRMLS_CC);
+
+        zval tempretval, *thisptr = getThis();
+        SPOTIFY_METHOD(SpotifyArtist, browse, &tempretval, thisptr);
+
+        int numportraits = sp_artistbrowse_num_portraits(p->artistbrowse);
+
+        RETURN_LONG(numportraits);
+}
+
+static void artistbrowse_complete(sp_artistbrowse *result, void *userdata)
+{
+        spotifyartist_object *p = (spotifyartist_object*)userdata;
+        p->artistbrowse = result;
+}
+
+PHP_METHOD(SpotifyArtist, browse)
+{
+        int timeout = 0;
+
+        spotifyartist_object *p = (spotifyartist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
+        if (p->artistbrowse != NULL) {
+                RETURN_TRUE;
+        }
+
+        sp_artistbrowse *tmpbrowse = sp_artistbrowse_create(p->session, p->artist, SP_ARTISTBROWSE_FULL, artistbrowse_complete, p);
+        while (!sp_artistbrowse_is_loaded(tmpbrowse)) {
+                sp_session_process_events(p->session, &timeout);
+        }
+
+        RETURN_TRUE;
+}
+
 PHP_METHOD(SpotifyArtist, __toString)
 {
 	spotifyartist_object *p = (spotifyartist_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
@@ -94,6 +177,9 @@ function_entry spotifyartist_methods[] = {
 	PHP_ME(SpotifyArtist, getName,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyArtist, getURI,			NULL,	ZEND_ACC_PUBLIC)
 	PHP_ME(SpotifyArtist, getAlbums,		NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyArtist, getPortrait,		NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyArtist, getNumPortraits,		NULL,	ZEND_ACC_PUBLIC)
+	PHP_ME(SpotifyArtist, browse,		NULL,	ZEND_ACC_PRIVATE)
 	PHP_ME(SpotifyArtist, __toString,		NULL,	ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}
 };

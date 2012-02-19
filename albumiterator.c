@@ -50,7 +50,7 @@ PHP_METHOD(SpotifyAlbumIterator, __construct)
 	spotifyalbumiterator_object *obj = (spotifyalbumiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
 	obj->session = p->session;
 	obj->artist = artistobj->artist;
-	obj->artistbrowse = sp_artistbrowse_create(p->session, artistobj->artist, spotify_artistbrowse_complete, obj);
+	obj->artistbrowse = sp_artistbrowse_create(p->session, artistobj->artist, SP_ARTISTBROWSE_FULL, spotify_artistbrowse_complete, obj);
 
 	while (!sp_artistbrowse_is_loaded(obj->artistbrowse)) {
 		sp_session_process_events(p->session, &timeout);
