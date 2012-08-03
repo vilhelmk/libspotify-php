@@ -135,7 +135,7 @@ PHP_METHOD(SpotifyAlbum, getCover)
         zval tempretval, *thisptr = getThis();
         SPOTIFY_METHOD(SpotifyAlbum, browse, &tempretval, thisptr);
 
-        const byte* image_id = sp_album_cover(p->album);
+        const byte* image_id = sp_album_cover(p->album, SP_IMAGE_SIZE_NORMAL);
         sp_image *image = sp_image_create(p->session, image_id);
 
         while(!sp_image_is_loaded(image))

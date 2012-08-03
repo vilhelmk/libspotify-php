@@ -121,7 +121,7 @@ PHP_METHOD(Spotify, __construct)
 		return;
 	}
 
-	sp_session_login(session, Z_STRVAL_P(z_user), Z_STRVAL_P(z_pass), 0);
+	sp_session_login(session, Z_STRVAL_P(z_user), Z_STRVAL_P(z_pass), 0, 0);
 
 	obj->session = session;
 	obj->timeout = 0;
