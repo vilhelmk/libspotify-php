@@ -146,7 +146,7 @@ PHP_METHOD(SpotifyAlbumIterator, offsetGet)
 	}
 
 	p = (spotifyalbumiterator_object*)zend_object_store_get_object(getThis() TSRMLS_CC);
-	album = sp_artistbrowse_album(p->artistbrowse, L_ZVAL_P(index));
+	album = sp_artistbrowse_album(p->artistbrowse, Z_LVAL_P(index));
 
 	spotifyobject = GET_THIS_PROPERTY(spotifyalbumiterator_ce, "spotify");
 
