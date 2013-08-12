@@ -221,7 +221,7 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_offsetUnset, 0, 0, 1)
 	ZEND_ARG_INFO(0, offset)
 ZEND_END_ARG_INFO()
 
-function_entry spotifytrackiterator_methods[] = {
+zend_function_entry spotifytrackiterator_methods[] = {
 	PHP_ME(SpotifyTrackIterator, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyTrackIterator, __destruct,		NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 
@@ -260,8 +260,12 @@ zend_object_value spotifytrackiterator_create_handler(zend_class_entry *type TSR
 	memset(obj, 0, sizeof(spotifytrackiterator_object));
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
-    zend_hash_copy(obj->std.properties, &type->default_properties,
+    #if PHP_VERSION_ID < 50399
+    	zend_hash_copy(obj->std.properties, &type->default_properties,
         (copy_ctor_func_t)zval_add_ref, (void *)&tmp, sizeof(zval *));
+    #else
+    	 object_properties_init(&(obj->std), type);
+   	#endif
 
     retval.handle = zend_objects_store_put(obj, NULL,
         spotifytrackiterator_free_storage, NULL TSRMLS_CC);

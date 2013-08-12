@@ -217,7 +217,7 @@ PHP_METHOD(SpotifyToplist, __toString)
 	RETURN_STRING("SpotifyToplist", 1);
 }
 
-function_entry spotifytoplist_methods[] = {
+zend_function_entry spotifytoplist_methods[] = {
 	PHP_ME(SpotifyToplist, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyToplist, __destruct,		NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyToplist, getRegionCode,			NULL,	ZEND_ACC_PUBLIC)
@@ -246,8 +246,12 @@ zend_object_value spotifytoplist_create_handler(zend_class_entry *type TSRMLS_DC
    // obj->std.ce = type;
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
-    zend_hash_copy(obj->std.properties, &type->default_properties,
+    #if PHP_VERSION_ID < 50399
+    	zend_hash_copy(obj->std.properties, &type->default_properties,
         (copy_ctor_func_t)zval_add_ref, (void *)&tmp, sizeof(zval *));
+    #else
+    	 object_properties_init(&(obj->std), type);
+   	#endif
 
     retval.handle = zend_objects_store_put(obj, NULL,
         spotifytoplist_free_storage, NULL TSRMLS_CC);

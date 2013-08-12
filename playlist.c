@@ -261,7 +261,7 @@ PHP_METHOD(SpotifyPlaylist, __toString)
 	RETURN_STRING(sp_playlist_name(p->playlist), 1);
 }
 
-function_entry spotifyplaylist_methods[] = {
+zend_function_entry spotifyplaylist_methods[] = {
 	PHP_ME(SpotifyPlaylist, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyPlaylist, __destruct,			NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyPlaylist, getName,			NULL,	ZEND_ACC_PUBLIC)
@@ -298,8 +298,12 @@ zend_object_value spotifyplaylist_create_handler(zend_class_entry *type TSRMLS_D
 	memset(obj, 0, sizeof(spotifyplaylist_object));
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
-    zend_hash_copy(obj->std.properties, &type->default_properties,
+    #if PHP_VERSION_ID < 50399
+    	zend_hash_copy(obj->std.properties, &type->default_properties,
         (copy_ctor_func_t)zval_add_ref, (void *)&tmp, sizeof(zval *));
+    #else
+    	 object_properties_init(&(obj->std), type);
+   	#endif
 
     retval.handle = zend_objects_store_put(obj, NULL,
         spotifyplaylist_free_storage, NULL TSRMLS_CC);

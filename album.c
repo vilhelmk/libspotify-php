@@ -180,7 +180,7 @@ PHP_METHOD(SpotifyAlbum, browse)
         RETURN_TRUE;
 }
 
-function_entry spotifyalbum_methods[] = {
+zend_function_entry spotifyalbum_methods[] = {
 	PHP_ME(SpotifyAlbum, __construct,		NULL,	ZEND_ACC_PRIVATE|ZEND_ACC_CTOR)
 	PHP_ME(SpotifyAlbum, __destruct,		NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(SpotifyAlbum, getName,			NULL,	ZEND_ACC_PUBLIC)
@@ -213,8 +213,12 @@ zend_object_value spotifyalbum_create_handler(zend_class_entry *type TSRMLS_DC)
 	memset(obj, 0, sizeof(spotifyalbum_object));
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
-    zend_hash_copy(obj->std.properties, &type->default_properties,
+    #if PHP_VERSION_ID < 50399
+    	zend_hash_copy(obj->std.properties, &type->default_properties,
         (copy_ctor_func_t)zval_add_ref, (void *)&tmp, sizeof(zval *));
+    #else
+    	 object_properties_init(&(obj->std), type);
+   	#endif
 
     retval.handle = zend_objects_store_put(obj, NULL,
         spotifyalbum_free_storage, NULL TSRMLS_CC);

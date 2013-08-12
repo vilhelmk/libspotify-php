@@ -425,7 +425,7 @@ static void log_message(sp_session *session, const char *data)
 	//php_printf("SPOTIFY_DEBUG: %s", data);
 }
 
-function_entry spotify_methods[] = {
+zend_function_entry spotify_methods[] = {
 	PHP_ME(Spotify, __construct,            NULL,   ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
 	PHP_ME(Spotify, __destruct,				NULL,	ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_ME(Spotify, getPlaylists,			NULL,	ZEND_ACC_PUBLIC)
@@ -462,8 +462,12 @@ zend_object_value spotify_create_handler(zend_class_entry *type TSRMLS_DC)
 	memset(obj, 0, sizeof(spotify_object));
 
 	zend_object_std_init(&obj->std, type TSRMLS_CC);
-    zend_hash_copy(obj->std.properties, &type->default_properties,
+    #if PHP_VERSION_ID < 50399
+    	zend_hash_copy(obj->std.properties, &type->default_properties,
         (copy_ctor_func_t)zval_add_ref, (void *)&tmp, sizeof(zval *));
+    #else
+    	 object_properties_init(&(obj->std), type);
+   	#endif
 
     retval.handle = zend_objects_store_put(obj, NULL,
         spotify_free_storage, NULL TSRMLS_CC);
